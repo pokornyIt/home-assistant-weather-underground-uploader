@@ -5,6 +5,11 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Improved release pages with curated summaries and categorized generated
+  changelogs.
+
 ## [0.1.0] - 2026-08-22
 
 ### Added

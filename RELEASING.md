@@ -11,9 +11,53 @@ itself is not sufficient.
    `custom_components/weather_underground_uploader/manifest.json`.
 4. Move the relevant entries from the `Unreleased` section of `CHANGELOG.md`
    into a versioned section with the release date.
-5. Run the complete validation suite documented in `CONTRIBUTING.md`.
-6. Merge the release-preparation pull request and verify CI, hassfest, and HACS
+5. Replace the previous content of `RELEASE_NOTES.md` with a concise summary of
+   the release using the convention below.
+6. Run the complete validation suite documented in `CONTRIBUTING.md`.
+7. Merge the release-preparation pull request and verify CI, hassfest, and HACS
    validation on `main`.
+
+## Write release notes
+
+`RELEASE_NOTES.md` contains only the curated introduction for the next release.
+The release workflow prepends it to GitHub's generated contributor and pull
+request changelog, so do not duplicate the complete PR list manually.
+
+Use this structure and omit an optional section only when it has no useful
+content:
+
+```markdown
+## 🌦️ Summary
+
+One short paragraph describing why the release matters to users.
+
+## ✨ Highlights
+
+- The most important user-visible changes.
+
+## ⚠️ Breaking changes
+
+None.
+
+## ⬆️ Installation and upgrade notes
+
+Only steps that differ from the normal HACS update process.
+```
+
+Always retain the breaking-changes heading and write `None.` when the release
+is backward compatible. Add installation or upgrade notes only when users need
+to take action.
+
+GitHub categorizes the generated changelog through `.github/release.yml`.
+Apply the most relevant standard label to each pull request:
+
+- `enhancement` for new features and user-visible improvements;
+- `bug` for fixes;
+- `documentation` for documentation-only changes.
+
+Unlabeled pull requests and maintenance work appear in the catch-all
+**Maintenance and other changes** category. Labels affect presentation only;
+they do not replace the curated summary or the explicit breaking-change note.
 
 ## Publish
 
@@ -29,7 +73,9 @@ The `Release` workflow verifies that the tag matches both project version
 files, reruns the quality, test, hassfest, and HACS checks, and then creates a
 full GitHub Release with generated release notes. The workflow does not publish
 an integration archive because HACS installs the integration from GitHub's
-release source archive.
+release source archive. The curated `RELEASE_NOTES.md` content appears first,
+followed by the categorized GitHub-generated changelog and full comparison
+link.
 
 ## Verify
 
