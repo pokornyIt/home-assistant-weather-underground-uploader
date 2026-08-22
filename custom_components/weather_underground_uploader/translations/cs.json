@@ -1,0 +1,97 @@
+{
+  "title": "Nahrávání do Weather Underground",
+  "config": {
+    "abort": {
+      "already_configured": "Tato stanice Weather Underground je již nastavena.",
+      "reauth_successful": "Station Key byl úspěšně aktualizován."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station_id": "Station ID",
+          "station_key": "Station Key"
+        },
+        "data_description": {
+          "station_id": "ID osobní meteorologické stanice Weather Underground.",
+          "station_key": "Nahrávací klíč této stanice. Je uložen jako tajný údaj."
+        },
+        "description": "Nastavte jednu virtuální osobní meteorologickou stanici Weather Underground.",
+        "title": "Přidat stanici"
+      },
+      "reauth_confirm": {
+        "data": {
+          "station_key": "Station Key"
+        },
+        "data_description": {
+          "station_key": "Nový nahrávací klíč této stanice. Je uložen jako tajný údaj."
+        },
+        "description": "Služba Weather Underground odmítla přihlašovací údaje této stanice. Zadejte nový Station Key.",
+        "title": "Znovu ověřit stanici"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "daily_rain_entity": "Denní úhrn srážek",
+          "dew_point_entity": "Rosný bod",
+          "hourly_rain_entity": "Hodinový úhrn srážek",
+          "humidity_entity": "Relativní vlhkost",
+          "pressure_entity": "Barometrický tlak",
+          "solar_radiation_entity": "Sluneční záření",
+          "temperature_entity": "Venkovní teplota",
+          "uv_index_entity": "UV index",
+          "wind_direction_entity": "Směr větru",
+          "upload_interval": "Interval odesílání",
+          "wind_gust_entity": "Náraz větru",
+          "wind_speed_entity": "Rychlost větru"
+        },
+        "data_description": {
+          "daily_rain_entity": "Entita poskytující úhrn srážek od začátku aktuálního dne.",
+          "dew_point_entity": "Volitelný přímo měřený rosný bod. Pokud není vybrán, vypočítá se podle možností z teploty a vlhkosti.",
+          "hourly_rain_entity": "Entita poskytující úhrn srážek od začátku aktuální hodiny.",
+          "humidity_entity": "Entita poskytující venkovní relativní vlhkost.",
+          "pressure_entity": "Entita poskytující barometrický tlak.",
+          "solar_radiation_entity": "Entita poskytující intenzitu slunečního záření ve W/m².",
+          "temperature_entity": "Entita poskytující venkovní teplotu.",
+          "uv_index_entity": "Entita poskytující číselnou hodnotu UV indexu.",
+          "wind_direction_entity": "Entita poskytující směr větru ve stupních.",
+          "upload_interval": "Doba mezi pravidelnými odesláními do Weather Underground.",
+          "wind_gust_entity": "Entita poskytující rychlost nárazu větru.",
+          "wind_speed_entity": "Entita poskytující rychlost ustáleného větru."
+        },
+        "description": "Zvolte interval odesílání a přiřaďte k virtuální stanici dostupné senzory nebo číselné pomocníky. Všechna přiřazení entit jsou volitelná.",
+        "title": "Možnosti stanice"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "upload_now": {
+        "name": "Odeslat nyní"
+      }
+    },
+    "sensor": {
+      "consecutive_failures": {
+        "name": "Počet po sobě jdoucích selhání"
+      },
+      "last_successful_upload": {
+        "name": "Poslední úspěšné odeslání"
+      },
+      "last_upload_attempt": {
+        "name": "Poslední pokus o odeslání"
+      },
+      "upload_status": {
+        "name": "Stav odesílání",
+        "state": {
+          "authentication_error": "Chyba ověření",
+          "error": "Chyba",
+          "idle": "Nečinné",
+          "no_data": "Žádná data",
+          "success": "Úspěšné"
+        }
+      }
+    }
+  }
+}
