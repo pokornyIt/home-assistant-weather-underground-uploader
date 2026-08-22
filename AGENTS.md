@@ -4,10 +4,10 @@
 
 These instructions apply to the entire repository.
 
-GitHub issue #1 defines the product scope and issues #2 through #7 define the
-incremental implementation roadmap. Read the active issue and the remaining
-roadmap issues before making architectural decisions. Implement only the active
-issue unless the user explicitly expands the scope.
+GitHub issue #1 defines the product scope. Issues #2 through #6, followed by
+#11 and then #7, define the incremental implementation roadmap. Read the active
+issue and the remaining roadmap issues before making architectural decisions.
+Implement only the active issue unless the user explicitly expands the scope.
 
 The integration represents a virtual Weather Underground Personal Weather
 Station composed from arbitrary Home Assistant entities. Do not introduce
@@ -17,6 +17,8 @@ dependencies on particular devices, vendors, or source integrations.
 
 - Communicate with the user in Czech.
 - Write source code and technical artifacts in English.
+- Keep English and Czech translation files synchronized whenever user-facing
+  integration text changes.
 - Use English for identifiers, comments, docstrings, tests, logs, errors,
   configuration comments, documentation, commit messages, and pull request
   text.
