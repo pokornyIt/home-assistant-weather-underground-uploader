@@ -20,6 +20,7 @@ class WeatherUndergroundUploadButton(ButtonEntity):
         self._attr_unique_id = station_entity_unique_id(entry, "upload_now")
         self._attr_device_info = station_device_info(entry)
         self._coordinator = entry.runtime_data.coordinator
+        self._attr_available = self._coordinator.upload_enabled
 
     async def async_press(self) -> None:
         """Request a serialized upload cycle."""

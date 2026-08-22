@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -20,11 +20,23 @@ from custom_components.weather_underground_uploader.const import (
     CONF_UPLOAD_INTERVAL,
     DOMAIN,
 )
-from custom_components.weather_underground_uploader.coordinator import UploadStatus
+from custom_components.weather_underground_uploader.coordinator import (
+    UploadStatus,
+    WeatherUndergroundUploadCoordinator,
+)
 
 
-def _create_entry(hass: HomeAssistant, *, station_id: str = "IPRAGUE1", interval: int = 300) -> MockConfigEntry:
+def _create_entry(
+    hass: HomeAssistant,
+    *,
+    station_id: str = "IPRAGUE1",
+    interval: int = 300,
+    mapped: bool = True,
+) -> MockConfigEntry:
     """Create a synthetic configured station."""
+    options: dict[str, str | int] = {CONF_UPLOAD_INTERVAL: interval}
+    if mapped:
+        options[CONF_TEMPERATURE] = f"sensor.{station_id.lower()}_temperature"
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=station_id,
@@ -33,17 +45,15 @@ def _create_entry(hass: HomeAssistant, *, station_id: str = "IPRAGUE1", interval
             CONF_STATION_ID: station_id,
             CONF_STATION_KEY: "synthetic-test-key",
         },
-        options={
-            CONF_TEMPERATURE: f"sensor.{station_id.lower()}_temperature",
-            CONF_UPLOAD_INTERVAL: interval,
-        },
+        options=options,
     )
     entry.add_to_hass(hass)
-    hass.states.async_set(
-        entry.options[CONF_TEMPERATURE],
-        "20",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
-    )
+    if mapped:
+        hass.states.async_set(
+            entry.options[CONF_TEMPERATURE],
+            "20",
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
     return entry
 
 
@@ -67,8 +77,6 @@ async def test_successful_upload_updates_operational_entities(hass: HomeAssistan
     upload = AsyncMock()
     with patch.object(WeatherUndergroundClient, "async_upload", upload):
         await _setup_entry(hass, entry)
-        await entry.runtime_data.coordinator.async_refresh()
-        await hass.async_block_till_done()
 
     upload.assert_awaited_once_with({"tempf": "68"})
     assert entry.runtime_data.coordinator.data.status is UploadStatus.SUCCESS
@@ -96,11 +104,29 @@ async def test_empty_observation_does_not_call_api(hass: HomeAssistant) -> None:
     upload = AsyncMock()
     with patch.object(WeatherUndergroundClient, "async_upload", upload):
         await _setup_entry(hass, entry)
-        await entry.runtime_data.coordinator.async_refresh()
 
     upload.assert_not_awaited()
     assert entry.runtime_data.coordinator.data.status is UploadStatus.NO_DATA
     assert entry.runtime_data.coordinator.data.consecutive_failures == 1
+    await _unload_entry(hass, entry)
+
+
+async def test_unmapped_station_remains_idle_and_unscheduled(hass: HomeAssistant) -> None:
+    """A station without mappings stays idle and disables manual upload."""
+    entry = _create_entry(hass, mapped=False)
+    upload = AsyncMock()
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        coordinator = entry.runtime_data.coordinator
+        await coordinator.async_refresh()
+
+    upload.assert_not_awaited()
+    assert coordinator.update_interval is None
+    assert coordinator.data.status is UploadStatus.IDLE
+    assert coordinator.data.last_attempt is None
+    assert coordinator.data.consecutive_failures == 0
+    button_state = hass.states.get("button.weather_underground_iprague1_upload_now")
+    assert button_state is not None and button_state.state == STATE_UNAVAILABLE
     await _unload_entry(hass, entry)
 
 
@@ -111,7 +137,6 @@ async def test_transient_failure_recovers_on_next_cycle(hass: HomeAssistant) -> 
     with patch.object(WeatherUndergroundClient, "async_upload", upload):
         await _setup_entry(hass, entry)
         coordinator = entry.runtime_data.coordinator
-        await coordinator.async_refresh()
         assert coordinator.data.status is UploadStatus.ERROR
         assert coordinator.data.consecutive_failures == 1
         assert entry.state is ConfigEntryState.LOADED
@@ -128,7 +153,10 @@ async def test_authentication_failure_starts_reauth(hass: HomeAssistant) -> None
     """Rejected credentials stop scheduling and start the linked repair flow."""
     entry = _create_entry(hass)
     upload = AsyncMock(side_effect=WeatherUndergroundAuthenticationError("rejected"))
-    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+    with (
+        patch.object(WeatherUndergroundClient, "async_upload", upload),
+        patch.object(WeatherUndergroundUploadCoordinator, "async_config_entry_first_refresh", AsyncMock()),
+    ):
         await _setup_entry(hass, entry)
         coordinator = entry.runtime_data.coordinator
         await coordinator.async_refresh()
@@ -166,7 +194,10 @@ async def test_concurrent_refreshes_do_not_overlap(hass: HomeAssistant) -> None:
             await release_first.wait()
         active -= 1
 
-    with patch.object(WeatherUndergroundClient, "async_upload", slow_upload):
+    with (
+        patch.object(WeatherUndergroundClient, "async_upload", slow_upload),
+        patch.object(WeatherUndergroundUploadCoordinator, "async_config_entry_first_refresh", AsyncMock()),
+    ):
         await _setup_entry(hass, entry)
         coordinator = entry.runtime_data.coordinator
         first = asyncio.create_task(coordinator.async_refresh())
@@ -186,8 +217,9 @@ async def test_stations_have_independent_coordinators(hass: HomeAssistant) -> No
     """Each config entry owns its client, interval, and coordinator state."""
     first = _create_entry(hass, station_id="IPRAGUE1", interval=120)
     second = _create_entry(hass, station_id="IBRNO2", interval=600)
-    await _setup_entry(hass, first)
-    await _setup_entry(hass, second)
+    with patch.object(WeatherUndergroundClient, "async_upload", AsyncMock()):
+        await _setup_entry(hass, first)
+        await _setup_entry(hass, second)
 
     assert first.runtime_data.client is not second.runtime_data.client
     assert first.runtime_data.coordinator is not second.runtime_data.coordinator
@@ -200,27 +232,37 @@ async def test_stations_have_independent_coordinators(hass: HomeAssistant) -> No
     await _unload_entry(hass, second)
 
 
-async def test_options_change_reloads_upload_interval(hass: HomeAssistant) -> None:
-    """Saving options replaces the coordinator with the new schedule."""
-    entry = _create_entry(hass, interval=300)
-    await _setup_entry(hass, entry)
-    previous_coordinator = entry.runtime_data.coordinator
+async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant) -> None:
+    """Saving the first mapping enables scheduling and uploads immediately."""
+    entry = _create_entry(hass, interval=300, mapped=False)
+    upload = AsyncMock()
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        previous_coordinator = entry.runtime_data.coordinator
+        assert previous_coordinator.update_interval is None
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            CONF_TEMPERATURE: entry.options[CONF_TEMPERATURE],
-            CONF_UPLOAD_INTERVAL: 120,
-        },
-    )
-    await hass.async_block_till_done()
+        temperature_entity = "sensor.synthetic_temperature"
+        hass.states.async_set(
+            temperature_entity,
+            "20",
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_TEMPERATURE: temperature_entity,
+                CONF_UPLOAD_INTERVAL: 120,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.coordinator is not previous_coordinator
     assert entry.runtime_data.coordinator.update_interval is not None
     assert entry.runtime_data.coordinator.update_interval.total_seconds() == 120
+    upload.assert_awaited_once_with({"tempf": "68"})
     await _unload_entry(hass, entry)
 
 
@@ -230,6 +272,7 @@ async def test_manual_upload_button_requests_refresh(hass: HomeAssistant) -> Non
     upload = AsyncMock()
     with patch.object(WeatherUndergroundClient, "async_upload", upload):
         await _setup_entry(hass, entry)
+        upload.reset_mock()
         await hass.services.async_call(
             "button",
             "press",

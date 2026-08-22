@@ -1,5 +1,6 @@
 """Data models for mapped weather observations."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
@@ -54,3 +55,8 @@ MAPPING_SPECS: Final = (
     MappingSpec(CONF_UV_INDEX, "UV", MeasurementKind.UV_INDEX),
     MappingSpec(CONF_SOLAR_RADIATION, "solarradiation", MeasurementKind.SOLAR_RADIATION),
 )
+
+
+def has_configured_mapping(options: Mapping[str, object]) -> bool:
+    """Return whether station options contain at least one entity mapping."""
+    return any(bool(options.get(spec.option_key)) for spec in MAPPING_SPECS)

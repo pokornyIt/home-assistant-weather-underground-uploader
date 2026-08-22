@@ -18,7 +18,7 @@
           "station_id": "ID osobní meteorologické stanice Weather Underground.",
           "station_key": "Nahrávací klíč této stanice. Je uložen jako tajný údaj."
         },
-        "description": "Nastavte jednu virtuální osobní meteorologickou stanici Weather Underground.",
+        "description": "Nastavte jednu virtuální osobní meteorologickou stanici Weather Underground. Po dokončení otevřete u položky integrace Nastavení a vyberte zdrojové entity. Odesílání zůstane neaktivní, dokud neuložíte alespoň jedno přiřazení.",
         "title": "Přidat stanici"
       },
       "reauth_confirm": {
@@ -64,7 +64,7 @@
           "wind_gust_entity": "Entita poskytující rychlost nárazu větru.",
           "wind_speed_entity": "Entita poskytující rychlost ustáleného větru."
         },
-        "description": "Zvolte interval odesílání a přiřaďte k virtuální stanici dostupné senzory nebo číselné pomocníky. Všechna přiřazení entit jsou volitelná.",
+        "description": "Zvolte interval odesílání a přiřaďte k virtuální stanici dostupné senzory nebo číselné pomocníky. Uložení prvního přiřazení ihned spustí odesílání.",
         "title": "Možnosti stanice"
       }
     }

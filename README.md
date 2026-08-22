@@ -67,13 +67,20 @@ The final path must be:
 4. Open the new integration entry and select **Configure**.
 5. Choose an upload interval and map the available Home Assistant entities.
 
+The device name and area screen shown by Home Assistant does not configure
+measurement sources. Open **Configure** on the integration entry after setup to
+select them. An unmapped station remains idle and does not schedule upload
+attempts. Saving the first mapping performs an immediate upload and starts the
+configured interval.
+
 The Station ID is normalized to uppercase and is the stable identifier for the
 config entry. The same Station ID cannot be configured twice. The Station Key
 is stored as a secret and is never included in logs or downloaded diagnostics.
 
-All measurement mappings are optional, but an upload requires at least one
-currently valid mapped value. The default upload interval is 300 seconds and
-can be set from 60 to 3,600 seconds.
+All measurement mappings are optional, but an active station requires at least
+one mapping and an upload requires at least one currently valid mapped value.
+The default upload interval is 300 seconds and can be set from 60 to 3,600
+seconds.
 
 ## Virtual stations and multiple stations
 
