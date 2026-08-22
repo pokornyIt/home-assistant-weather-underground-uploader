@@ -5,6 +5,11 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed the initial configuration form failing to open in the Home Assistant
+  frontend.
+
 ### Changed
 
 - Improved release pages with curated summaries and categorized generated

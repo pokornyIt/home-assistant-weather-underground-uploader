@@ -1,11 +1,12 @@
 ## 🌦️ Summary
 
-This release makes project updates and contributions easier to understand.
-Release pages now open with a concise overview, and new contribution templates
-guide useful, secret-safe reports and pull requests.
+This release restores initial setup through the Home Assistant frontend and
+makes project updates and contributions easier to understand.
 
 ## ✨ Highlights
 
+- The Station ID form now opens correctly and retains its normalization and
+  duplicate-station protection.
 - Pull requests are grouped into features, fixes, documentation, and
   maintenance categories.
 - Release preparation follows a reusable, documented notes convention while
