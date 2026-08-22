@@ -5,6 +5,15 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-23
+
+### Changed
+
+- Enabled complete HACS validation of integration-local brand assets without
+  ignored checks.
+- Prepared the repository for submission to the default HACS integration
+  catalog.
+
 ## [0.1.1] - 2026-08-23
 
 ### Fixed
@@ -32,6 +41,7 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 - English and Czech translations.
 - Automated tests, CI, hassfest, HACS validation, and release automation.
 
-[Unreleased]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/releases/tag/v0.1.0
