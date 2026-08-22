@@ -1,13 +1,15 @@
 """Home Assistant Weather Underground Uploader integration."""
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import WeatherUndergroundClient
 from .const import CONF_STATION_ID, CONF_STATION_KEY
+from .coordinator import WeatherUndergroundUploadCoordinator
+from .runtime import WeatherUndergroundUploaderConfigEntry, WeatherUndergroundUploaderRuntimeData
 
-type WeatherUndergroundUploaderConfigEntry = ConfigEntry[WeatherUndergroundClient]
+PLATFORMS = (Platform.SENSOR, Platform.BUTTON)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WeatherUndergroundUploaderConfigEntry) -> bool:
@@ -17,11 +19,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherUndergroundUpload
     :param entry: Weather Underground station config entry.
     :return: Whether setup completed successfully.
     """
-    entry.runtime_data = WeatherUndergroundClient(
+    client = WeatherUndergroundClient(
         async_get_clientsession(hass),
         station_id=entry.data[CONF_STATION_ID],
         station_key=entry.data[CONF_STATION_KEY],
     )
+    coordinator = WeatherUndergroundUploadCoordinator(hass, entry, client)
+    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
+    entry.runtime_data = WeatherUndergroundUploaderRuntimeData(client, coordinator)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -32,4 +38,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: WeatherUndergroundUploa
     :param entry: Weather Underground station config entry.
     :return: Whether unload completed successfully.
     """
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

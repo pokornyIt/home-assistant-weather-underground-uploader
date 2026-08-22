@@ -34,11 +34,12 @@ The current implementation provides the initial integration foundation:
 - metric and imperial unit normalization for Weather Underground fields;
 - validation and graceful omission of unavailable mapped values;
 - explicit or calculated dew point support;
+- independent scheduled uploads for every configured station;
+- operational status sensors and a manual upload button;
+- Station Key repair through Home Assistant reauthentication;
 - English translations and focused config-flow tests.
 
-Automatic Weather Underground uploads are not implemented yet. Scheduling,
-operational entities, diagnostics, and release packaging are tracked as separate
-roadmap stages in
+Diagnostics, CI, and release packaging are tracked as separate roadmap stages in
 [GitHub issues](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/issues).
 
 ## Planned measurements
@@ -75,6 +76,25 @@ All mappings are optional. The minimum upload payload is one valid mapped
 measurement; an empty observation is not sent. When no dew-point entity is
 mapped, dew point is calculated from valid temperature and relative humidity
 values. An explicitly mapped dew point always takes precedence.
+
+## Upload operation
+
+Each configured station has an independent asynchronous uploader. The default
+upload interval is five minutes and can be changed in station options from 60 to
+3,600 seconds. Saving options reloads only that config entry and applies the new
+schedule without restarting Home Assistant.
+
+Observations are rebuilt immediately before every upload. Uploads for the same
+station are serialized, including requests made with the **Upload now** button,
+so a slow request cannot overlap the next one. Temporary service or network
+failures leave the integration loaded and retry on the next scheduled cycle.
+Repeated failures produce only one warning until uploads recover. Rejected
+credentials start Home Assistant's reauthentication flow for replacing the
+Station Key.
+
+The virtual station exposes sensors for upload status, the last attempt, the
+last successful upload, and consecutive failures. These remain available when
+an upload fails, allowing the problem to be seen without reading logs.
 
 ## Repository layout
 
