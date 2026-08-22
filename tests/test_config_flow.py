@@ -12,6 +12,8 @@ from custom_components.weather_underground_uploader.const import (
     CONF_STATION_ID,
     CONF_STATION_KEY,
     CONF_TEMPERATURE,
+    CONF_UPLOAD_INTERVAL,
+    DEFAULT_UPLOAD_INTERVAL_SECONDS,
     DOMAIN,
 )
 from custom_components.weather_underground_uploader.models import MAPPING_SPECS
@@ -111,7 +113,10 @@ class TestConfigFlow:
         assert result["step_id"] == "init"
         data_schema = result["data_schema"]
         assert data_schema is not None
-        assert set(data_schema.schema) == {spec.option_key for spec in MAPPING_SPECS}
+        assert set(data_schema.schema) == {
+            CONF_UPLOAD_INTERVAL,
+            *(spec.option_key for spec in MAPPING_SPECS),
+        }
 
     async def test_options_flow_saves_entity_mappings(self, hass: HomeAssistant) -> None:
         """Submitted entity mappings are stored as config-entry options."""
@@ -138,4 +143,44 @@ class TestConfigFlow:
         assert entry.options == {
             CONF_TEMPERATURE: "sensor.outdoor_temperature",
             CONF_HUMIDITY: "input_number.outdoor_humidity",
+            CONF_UPLOAD_INTERVAL: float(DEFAULT_UPLOAD_INTERVAL_SECONDS),
         }
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+    async def test_reauthentication_updates_only_station_key(self, hass: HomeAssistant) -> None:
+        """Reauthentication replaces the rejected key and preserves station identity."""
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=TEST_STATION_ID,
+            data={
+                CONF_STATION_ID: TEST_STATION_ID,
+                CONF_STATION_KEY: TEST_STATION_KEY,
+            },
+        )
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=dict(entry.data),
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_STATION_KEY: "replacement-synthetic-key"},
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert entry.data == {
+            CONF_STATION_ID: TEST_STATION_ID,
+            CONF_STATION_KEY: "replacement-synthetic-key",
+        }
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
