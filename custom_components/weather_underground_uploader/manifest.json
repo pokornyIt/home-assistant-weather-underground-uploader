@@ -1,0 +1,13 @@
+{
+  "codeowners": ["@pokornyIt"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/pokornyIt/home-assistant-weather-underground-uploader",
+  "domain": "weather_underground_uploader",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/pokornyIt/home-assistant-weather-underground-uploader/issues",
+  "name": "Weather Underground Uploader",
+  "requirements": [],
+  "version": "0.1.0"
+}

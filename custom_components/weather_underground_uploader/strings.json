@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Weather Underground station is already configured."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station_id": "Station ID",
+          "station_key": "Station Key"
+        },
+        "data_description": {
+          "station_id": "The Weather Underground Personal Weather Station ID.",
+          "station_key": "The upload key for this station. It is stored as a secret."
+        },
+        "description": "Configure one virtual Weather Underground Personal Weather Station.",
+        "title": "Add station"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Entity mappings and upload settings will be available in a later version.",
+        "title": "Station options"
+      }
+    }
+  }
+}
