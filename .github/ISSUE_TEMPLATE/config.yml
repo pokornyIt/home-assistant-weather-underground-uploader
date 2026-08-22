@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup, usage, and troubleshooting guide
+    url: https://github.com/pokornyIt/home-assistant-weather-underground-uploader#troubleshooting
+    about: Review the documentation before opening a bug report.
