@@ -5,6 +5,8 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-23
+
 ### Fixed
 
 - Fixed the initial configuration form failing to open in the Home Assistant
@@ -30,5 +32,6 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 - English and Czech translations.
 - Automated tests, CI, hassfest, HACS validation, and release automation.
 
-[Unreleased]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/releases/tag/v0.1.0
