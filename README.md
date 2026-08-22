@@ -11,7 +11,7 @@
 [![CI](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/actions/workflows/ci.yml/badge.svg)](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/actions/workflows/ci.yml)
 [![Hassfest](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/actions/workflows/hassfest.yml/badge.svg)](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/actions/workflows/hassfest.yml)
 [![HACS](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/actions/workflows/hacs.yml/badge.svg)](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/actions/workflows/hacs.yml)
-[![License][license-shield]](LICENSE)
+[![License](https://img.shields.io/github/license/pokornyIt/home-assistant-weather-underground-uploader)](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/blob/main/LICENSE)
 
 Upload a virtual Personal Weather Station assembled from arbitrary Home
 Assistant entities to Weather Underground.
@@ -259,5 +259,3 @@ This project is licensed under the [MIT License](LICENSE).
 Weather Underground and Home Assistant are trademarks of their respective
 owners. This community project is not affiliated with or endorsed by either
 project or company.
-
-[license-shield]: https://img.shields.io/github/license/pokornyIt/home-assistant-weather-underground-uploader.svg?style=for-the-badge
