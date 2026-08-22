@@ -12,6 +12,8 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    EntitySelector,  # pyright: ignore[reportUnknownVariableType]
+    EntitySelectorConfig,
     Selector,
     TextSelector,  # pyright: ignore[reportUnknownVariableType]
     TextSelectorConfig,
@@ -19,10 +21,14 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_STATION_ID, CONF_STATION_KEY, DOMAIN
+from .models import MAPPING_SPECS
 
 _STATION_ID_SCHEMA = vol.All(str, str.strip, vol.Length(min=1), str.upper)
 _STATION_KEY_SELECTOR: Selector[TextSelectorConfig] = TextSelector(  # pyright: ignore[reportUnknownVariableType]
     TextSelectorConfig(type=TextSelectorType.PASSWORD)
+)
+_WEATHER_ENTITY_SELECTOR: Selector[EntitySelectorConfig] = EntitySelector(  # pyright: ignore[reportUnknownVariableType]
+    EntitySelectorConfig(filter=[{"domain": ["sensor", "input_number"]}])
 )
 
 
@@ -68,12 +74,10 @@ class WeatherUndergroundUploaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class WeatherUndergroundUploaderOptionsFlow(OptionsFlowWithReload):
-    """Provide the options-flow foundation for future station settings."""
+    """Configure entity mappings for one station."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Show or save station options.
-
-        Entity mappings and upload behavior are added by later roadmap issues.
 
         :param user_input: Values submitted by the user, if any.
         :return: Current options-flow result.
@@ -81,4 +85,15 @@ class WeatherUndergroundUploaderOptionsFlow(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema({}))
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        spec.option_key,
+                        description={"suggested_value": self.config_entry.options.get(spec.option_key)},
+                    ): _WEATHER_ENTITY_SELECTOR
+                    for spec in MAPPING_SPECS
+                }
+            ),
+        )

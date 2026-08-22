@@ -21,7 +21,33 @@
   "options": {
     "step": {
       "init": {
-        "description": "Entity mappings and upload settings will be available in a later version.",
+        "data": {
+          "daily_rain_entity": "Daily rain",
+          "dew_point_entity": "Dew point",
+          "hourly_rain_entity": "Hourly rain",
+          "humidity_entity": "Relative humidity",
+          "pressure_entity": "Barometric pressure",
+          "solar_radiation_entity": "Solar radiation",
+          "temperature_entity": "Outdoor temperature",
+          "uv_index_entity": "UV index",
+          "wind_direction_entity": "Wind direction",
+          "wind_gust_entity": "Wind gust",
+          "wind_speed_entity": "Wind speed"
+        },
+        "data_description": {
+          "daily_rain_entity": "Entity providing accumulated rain for the current day.",
+          "dew_point_entity": "Optional explicit dew point. When omitted, it is calculated from temperature and humidity when possible.",
+          "hourly_rain_entity": "Entity providing accumulated rain for the current hour.",
+          "humidity_entity": "Entity providing outdoor relative humidity.",
+          "pressure_entity": "Entity providing barometric pressure.",
+          "solar_radiation_entity": "Entity providing solar irradiance in W/m².",
+          "temperature_entity": "Entity providing outdoor temperature.",
+          "uv_index_entity": "Entity providing the numeric UV index.",
+          "wind_direction_entity": "Entity providing wind direction in degrees.",
+          "wind_gust_entity": "Entity providing wind gust speed.",
+          "wind_speed_entity": "Entity providing sustained wind speed."
+        },
+        "description": "Map any available sensor or numeric helper to the virtual station. Every mapping is optional.",
         "title": "Station options"
       }
     }
