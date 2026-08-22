@@ -37,9 +37,12 @@ The current implementation provides the initial integration foundation:
 - independent scheduled uploads for every configured station;
 - operational status sensors and a manual upload button;
 - Station Key repair through Home Assistant reauthentication;
+- secret-safe Home Assistant diagnostics;
+- automated tests with enforced coverage, type, lint, and format checks;
+- GitHub Actions validation with CI, hassfest, and HACS;
 - English translations and focused config-flow tests.
 
-Diagnostics, CI, and release packaging are tracked as separate roadmap stages in
+Release packaging and end-user installation documentation are tracked in
 [GitHub issues](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/issues).
 
 ## Planned measurements
@@ -120,12 +123,15 @@ uv run pre-commit run --all-files
 ```
 
 Tests use synthetic station data and do not contact Weather Underground or
-require live credentials.
+require live credentials. The test suite enforces at least 95% statement
+coverage for the integration package.
 
 ## Security
 
 Treat the Weather Underground Station Key as a secret. Do not include real keys
 in bug reports, logs, diagnostics, screenshots, tests, or example files.
+Downloaded Home Assistant diagnostics redact the Station Key and include only
+selected configuration and operational state.
 
 ## License
 

@@ -17,6 +17,7 @@ dev = [
   "pre-commit>=4.6,<5",
   "pyright>=1.1.404,<2",
   "pytest>=9,<10",
+  "pytest-cov>=7,<8",
   "pytest-homeassistant-custom-component==0.13.348",
   "ruff>=0.16,<0.17",
 ]
@@ -33,9 +34,21 @@ reportTypedDictNotRequiredAccess = false
 reportUnknownMemberType = false
 
 [tool.pytest.ini_options]
-addopts = ["--strict-config", "--strict-markers"]
+addopts = [
+  "--strict-config",
+  "--strict-markers",
+  "--cov=custom_components/weather_underground_uploader",
+  "--cov-report=term-missing",
+  "--cov-fail-under=95",
+]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.ruff]
 line-length = 120

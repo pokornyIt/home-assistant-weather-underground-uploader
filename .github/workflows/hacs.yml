@@ -1,0 +1,23 @@
+name: HACS
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "30 4 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate:
+    name: Validate repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run HACS validation
+        uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa
+        with:
+          category: integration
+          ignore: brands description hacsjson topics
