@@ -9,6 +9,7 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 
 - Improved release pages with curated summaries and categorized generated
   changelogs.
+- Added structured contribution templates and concise contributor guidance.
 
 ## [0.1.0] - 2026-08-22
 

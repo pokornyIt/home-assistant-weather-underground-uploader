@@ -1,0 +1,62 @@
+name: Feature request
+description: Propose a focused improvement to Weather Underground Uploader.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This integration composes Home Assistant entities into a virtual Weather
+        Underground Personal Weather Station and uploads observations. Reading
+        forecasts, vendor-specific functionality, and unrelated Weather Underground
+        features are outside that focused scope.
+
+        Never include a Station Key, real Station ID, credential-bearing URL,
+        token, or private data.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What user need would this change address?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_behavior
+    attributes:
+      label: Proposed behavior
+      description: Describe the observable result rather than detailed implementation steps.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope_fit
+    attributes:
+      label: Scope fit
+      description: Explain how this supports Home Assistant entities to Weather Underground PWS uploads.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: Describe any Home Assistant helpers, templates, or other approaches you considered.
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Additional examples
+      description: Add concise mockups or examples only when they clarify the request.
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues for the same request.
+          required: true
+        - label: >-
+            I did not include a Station Key, real Station ID, credential-bearing
+            URL, token, or other sensitive information.
+          required: true
