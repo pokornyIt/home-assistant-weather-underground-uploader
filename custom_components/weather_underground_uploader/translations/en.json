@@ -5,6 +5,9 @@
       "already_configured": "This Weather Underground station is already configured.",
       "reauth_successful": "The Station Key was updated successfully."
     },
+    "error": {
+      "invalid_station_id": "Enter a Station ID containing at least one non-whitespace character."
+    },
     "step": {
       "user": {
         "data": {

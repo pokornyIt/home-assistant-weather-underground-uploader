@@ -5,6 +5,9 @@
       "already_configured": "Tato stanice Weather Underground je již nastavena.",
       "reauth_successful": "Station Key byl úspěšně aktualizován."
     },
+    "error": {
+      "invalid_station_id": "Zadejte Station ID obsahující alespoň jeden jiný znak než mezeru."
+    },
     "step": {
       "user": {
         "data": {

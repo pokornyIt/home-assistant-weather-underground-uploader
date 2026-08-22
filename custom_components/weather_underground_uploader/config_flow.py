@@ -34,7 +34,7 @@ from .const import (
 )
 from .models import MAPPING_SPECS
 
-_STATION_ID_SCHEMA = vol.All(str, str.strip, vol.Length(min=1), str.upper)
+_STATION_ID_SCHEMA = vol.All(str, vol.Length(min=1))
 _STATION_KEY_SELECTOR: Selector[TextSelectorConfig] = TextSelector(  # pyright: ignore[reportUnknownVariableType]
     TextSelectorConfig(type=TextSelectorType.PASSWORD)
 )
@@ -75,12 +75,17 @@ class WeatherUndergroundUploaderConfigFlow(ConfigFlow, domain=DOMAIN):
         :param user_input: Values submitted by the user, if any.
         :return: Current config-flow result.
         """
+        errors: dict[str, str] = {}
         if user_input is not None:
-            station_id: str = user_input[CONF_STATION_ID]
-            await self.async_set_unique_id(station_id)
-            self._abort_if_unique_id_configured()
+            station_id: str = user_input[CONF_STATION_ID].strip().upper()
+            if station_id:
+                user_input[CONF_STATION_ID] = station_id
+                await self.async_set_unique_id(station_id)
+                self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=station_id, data=user_input)
+                return self.async_create_entry(title=station_id, data=user_input)
+
+            errors[CONF_STATION_ID] = "invalid_station_id"
 
         return self.async_show_form(
             step_id="user",
@@ -90,6 +95,7 @@ class WeatherUndergroundUploaderConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_STATION_KEY): _STATION_KEY_SELECTOR,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
