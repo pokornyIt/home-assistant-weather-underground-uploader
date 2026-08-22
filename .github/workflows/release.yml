@@ -68,9 +68,6 @@ jobs:
         uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa
         with:
           category: integration
-          # Local brand assets are supported by Home Assistant 2026.3+, but
-          # this check requires a separate home-assistant/brands submission.
-          ignore: brands
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
