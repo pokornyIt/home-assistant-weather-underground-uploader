@@ -4,6 +4,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.weather_underground_uploader.api import (
+    WeatherUndergroundClient,
+)
 from custom_components.weather_underground_uploader.const import (
     CONF_STATION_ID,
     CONF_STATION_KEY,
@@ -29,6 +32,7 @@ class TestConfigEntryLifecycle:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED
+        assert isinstance(entry.runtime_data, WeatherUndergroundClient)
 
         assert await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()

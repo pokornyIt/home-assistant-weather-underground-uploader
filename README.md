@@ -29,12 +29,13 @@ The current implementation provides the initial integration foundation:
 - duplicate Station ID protection;
 - support for multiple station config entries;
 - config-entry setup, reload, and unload lifecycle;
+- an asynchronous, credential-safe Weather Underground upload client;
 - an options-flow foundation for later settings;
 - English translations and focused config-flow tests.
 
-Weather Underground uploads are not implemented yet. The upload client, entity
-mapping, unit normalization, scheduling, operational entities, diagnostics, and
-release packaging are tracked as separate roadmap stages in
+Automatic Weather Underground uploads are not implemented yet. Entity mapping,
+unit normalization, scheduling, operational entities, diagnostics, and release
+packaging are tracked as separate roadmap stages in
 [GitHub issues](https://github.com/pokornyIt/home-assistant-weather-underground-uploader/issues).
 
 ## Planned measurements
