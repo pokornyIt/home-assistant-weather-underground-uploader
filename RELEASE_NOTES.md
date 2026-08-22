@@ -7,6 +7,8 @@ makes project updates and contributions easier to understand.
 
 - The Station ID form now opens correctly and retains its normalization and
   duplicate-station protection.
+- Unmapped stations now remain idle, setup explains where mappings are stored,
+  and saving the first mapping starts uploads immediately.
 - Pull requests are grouped into features, fixes, documentation, and
   maintenance categories.
 - Release preparation follows a reusable, documented notes convention while

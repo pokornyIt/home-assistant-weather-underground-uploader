@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 from .api import WeatherUndergroundAuthenticationError, WeatherUndergroundClient, WeatherUndergroundError
 from .const import CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_SECONDS
 from .mapping import build_observation
+from .models import has_configured_mapping
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,12 +56,13 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
         :param client: Credential-safe upload client.
         """
         interval_seconds = int(entry.options.get(CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_SECONDS))
+        self.upload_enabled: bool = has_configured_mapping(entry.options)
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=f"Weather Underground Uploader {entry.title}",
-            update_interval=timedelta(seconds=interval_seconds),
+            update_interval=timedelta(seconds=interval_seconds) if self.upload_enabled else None,
         )
         self.data = UploadState()
         self._entry = entry
@@ -70,6 +72,9 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
     @override
     async def _async_update_data(self) -> UploadState:
         """Build and upload one fresh observation."""
+        if not self.upload_enabled:
+            return self.data
+
         attempted_at = dt_util.utcnow()
         observation = build_observation(self.hass, self._entry.options, now=attempted_at)
         if not observation:
