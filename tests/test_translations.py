@@ -45,3 +45,11 @@ def test_czech_translation_preserves_protocol_identifiers() -> None:
 
     assert czech[("config", "step", "user", "data", "station_id")] == "Station ID"
     assert czech[("config", "step", "user", "data", "station_key")] == "Station Key"
+
+
+def test_mapping_guidance_is_separate_and_emphasized() -> None:
+    """Initial setup highlights the follow-up mapping step in each language."""
+    for language, label in {"en": "Next step", "cs": "Další krok"}.items():
+        translations = _leaf_values(_load_translation(language))
+        description = translations[("config", "step", "user", "description")]
+        assert f"\n\n**{label}:**" in description

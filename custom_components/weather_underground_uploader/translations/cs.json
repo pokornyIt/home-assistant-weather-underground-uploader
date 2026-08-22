@@ -18,7 +18,7 @@
           "station_id": "ID osobní meteorologické stanice Weather Underground.",
           "station_key": "Nahrávací klíč této stanice. Je uložen jako tajný údaj."
         },
-        "description": "Nastavte jednu virtuální osobní meteorologickou stanici Weather Underground. Po dokončení otevřete u položky integrace Nastavení a vyberte zdrojové entity. Odesílání zůstane neaktivní, dokud neuložíte alespoň jedno přiřazení.",
+        "description": "Nastavte jednu virtuální osobní meteorologickou stanici Weather Underground.\n\n**Další krok:** Po vytvoření stanice otevřete u položky integrace **Nastavení** a vyberte zdrojové entity. Odesílání zůstane neaktivní, dokud neuložíte alespoň jedno přiřazení.",
         "title": "Přidat stanici"
       },
       "reauth_confirm": {
