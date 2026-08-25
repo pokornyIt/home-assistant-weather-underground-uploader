@@ -160,6 +160,11 @@ Each station exposes:
 - **Upload now** button;
 - **Test upload** button.
 
+Home Assistant groups these entities under one device named
+**Weather Underground `<Station ID>`**. Each config entry has its own stable
+device, including when multiple WU stations are configured or an entry is
+reloaded.
+
 The test requires at least one mapped measurement with a currently valid value
 and supported unit. Invalid credentials start Home Assistant reauthentication;
 temporary Weather Underground or network failures are reported separately.

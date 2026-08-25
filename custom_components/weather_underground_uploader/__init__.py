@@ -7,6 +7,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import WeatherUndergroundClient
 from .const import CONF_STATION_ID, CONF_STATION_KEY
 from .coordinator import WeatherUndergroundUploadCoordinator
+from .entity import async_migrate_station_registry
 from .runtime import WeatherUndergroundUploaderConfigEntry, WeatherUndergroundUploaderRuntimeData
 
 PLATFORMS = (Platform.SENSOR, Platform.BUTTON)
@@ -19,6 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherUndergroundUpload
     :param entry: Weather Underground station config entry.
     :return: Whether setup completed successfully.
     """
+    async_migrate_station_registry(hass, entry)
     client = WeatherUndergroundClient(
         async_get_clientsession(hass),
         station_id=entry.data[CONF_STATION_ID],
