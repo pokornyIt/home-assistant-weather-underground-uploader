@@ -3,10 +3,14 @@
   "config": {
     "abort": {
       "already_configured": "Tato stanice Weather Underground je již nastavena.",
-      "reauth_successful": "Station Key byl úspěšně aktualizován."
+      "reauth_successful": "Station Key byl úspěšně aktualizován.",
+      "reconfigure_successful": "Přihlašovací údaje stanice byly úspěšně aktualizovány."
     },
     "error": {
-      "invalid_station_id": "Zadejte Station ID obsahující alespoň jeden jiný znak než mezeru."
+      "cannot_connect": "Nové přihlašovací údaje se nepodařilo ověřit, protože služba Weather Underground není dostupná nebo vrátila neočekávanou odpověď. Zkuste to znovu později.",
+      "invalid_auth": "Služba Weather Underground odmítla nové Station ID nebo Station Key. Původní přihlašovací údaje nebyly změněny.",
+      "invalid_station_id": "Zadejte Station ID obsahující alespoň jeden jiný znak než mezeru.",
+      "invalid_station_key": "Zadejte Station Key obsahující alespoň jeden jiný znak než mezeru."
     },
     "step": {
       "user": {
@@ -30,6 +34,18 @@
         },
         "description": "Služba Weather Underground odmítla přihlašovací údaje této stanice. Zadejte nový Station Key.",
         "title": "Znovu ověřit stanici"
+      },
+      "reconfigure": {
+        "data": {
+          "station_id": "Station ID",
+          "station_key": "Station Key"
+        },
+        "data_description": {
+          "station_id": "Nové ID osobní meteorologické stanice Weather Underground.",
+          "station_key": "Nový nahrávací klíč této stanice. Je uložen jako tajný údaj a nikdy se předem nevyplňuje."
+        },
+        "description": "Změňte přihlašovací údaje stanice bez ztráty přiřazení entit nebo možností. Pokud je právě platná alespoň jedna přiřazená veličina, Home Assistant před uložením odešle jedny údaje s novými přihlašovacími údaji pro jejich ověření.",
+        "title": "Změnit nastavení stanice"
       }
     }
   },

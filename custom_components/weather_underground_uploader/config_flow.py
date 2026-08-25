@@ -11,6 +11,7 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     EntitySelector,  # pyright: ignore[reportUnknownVariableType]
     EntitySelectorConfig,
@@ -23,6 +24,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from .api import WeatherUndergroundAuthenticationError, WeatherUndergroundClient, WeatherUndergroundError
 from .const import (
     CONF_STATION_ID,
     CONF_STATION_KEY,
@@ -32,6 +34,7 @@ from .const import (
     MAX_UPLOAD_INTERVAL_SECONDS,
     MIN_UPLOAD_INTERVAL_SECONDS,
 )
+from .mapping import build_observation
 from .models import MAPPING_SPECS
 
 _STATION_ID_SCHEMA = vol.All(str, vol.Length(min=1))
@@ -114,6 +117,63 @@ class WeatherUndergroundUploaderConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_STATION_KEY): _STATION_KEY_SELECTOR}),
+        )
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Change station credentials while preserving the config entry."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            station_id: str = user_input[CONF_STATION_ID].strip().upper()
+            if not station_id:
+                errors[CONF_STATION_ID] = "invalid_station_id"
+            else:
+                station_key: str = user_input[CONF_STATION_KEY]
+                if not station_key.strip():
+                    errors[CONF_STATION_KEY] = "invalid_station_key"
+                else:
+                    if station_id != entry.unique_id:
+                        await self.async_set_unique_id(station_id)
+                        self._abort_if_unique_id_configured()
+
+                    observation = build_observation(self.hass, entry.options)
+                    if observation:
+                        client = WeatherUndergroundClient(
+                            async_get_clientsession(self.hass),
+                            station_id=station_id,
+                            station_key=station_key,
+                        )
+                        try:
+                            await client.async_upload(observation)
+                        except WeatherUndergroundAuthenticationError:
+                            errors["base"] = "invalid_auth"
+                        except WeatherUndergroundError:
+                            errors["base"] = "cannot_connect"
+
+                if not errors:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        unique_id=station_id,
+                        title=station_id,
+                        data_updates={
+                            CONF_STATION_ID: station_id,
+                            CONF_STATION_KEY: station_key,
+                        },
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_STATION_ID,
+                        default=entry.data[CONF_STATION_ID],
+                    ): _STATION_ID_SCHEMA,
+                    vol.Required(CONF_STATION_KEY): _STATION_KEY_SELECTOR,
+                }
+            ),
+            errors=errors,
         )
 
 
