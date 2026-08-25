@@ -208,6 +208,28 @@ def test_dew_point_is_calculated_when_not_mapped(hass: HomeAssistant) -> None:
     assert float(observation["dewptf"]) == pytest.approx(48.7, abs=0.1)
 
 
+def test_helper_and_template_sensor_states_are_normalized(hass: HomeAssistant) -> None:
+    """Helpers and metadata-free template sensors work from state semantics alone."""
+    _set_measurement(
+        hass,
+        "sensor.template_outdoor_temperature",
+        21,
+        UnitOfTemperature.CELSIUS,
+    )
+    _set_measurement(hass, "input_number.outdoor_humidity", 65, PERCENTAGE)
+
+    observation = build_observation(
+        hass,
+        {
+            CONF_TEMPERATURE: "sensor.template_outdoor_temperature",
+            CONF_HUMIDITY: "input_number.outdoor_humidity",
+        },
+    )
+
+    assert observation["tempf"] == "69.8"
+    assert observation["humidity"] == "65"
+
+
 def test_explicit_dew_point_wins(hass: HomeAssistant) -> None:
     """A mapped dew point takes precedence over calculation."""
     _set_measurement(hass, "sensor.temperature", 20, UnitOfTemperature.CELSIUS)

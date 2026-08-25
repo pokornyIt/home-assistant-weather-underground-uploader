@@ -26,6 +26,7 @@ from custom_components.weather_underground_uploader.const import (
     DOMAIN,
 )
 from custom_components.weather_underground_uploader.models import MAPPING_SPECS
+from custom_components.weather_underground_uploader.selectors import WEATHER_SOURCE_ENTITY_SELECTOR
 
 TEST_STATION_ID: Final = "IPRAGUE1"
 TEST_STATION_KEY: Final = "synthetic-test-key"
@@ -143,6 +144,11 @@ class TestConfigFlow:
             CONF_UPLOAD_INTERVAL,
             *(spec.option_key for spec in MAPPING_SPECS),
         }
+        mapping_selectors = [
+            validator for key, validator in data_schema.schema.items() if key.schema != CONF_UPLOAD_INTERVAL
+        ]
+        assert mapping_selectors == [WEATHER_SOURCE_ENTITY_SELECTOR] * len(MAPPING_SPECS)
+        assert WEATHER_SOURCE_ENTITY_SELECTOR.config["filter"] == [{"domain": ["sensor", "input_number"]}]
 
     async def test_options_flow_saves_entity_mappings(self, hass: HomeAssistant) -> None:
         """Submitted entity mappings are stored as config-entry options."""

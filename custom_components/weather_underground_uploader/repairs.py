@@ -9,20 +9,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.selector import (
-    EntitySelector,  # pyright: ignore[reportUnknownVariableType]
-    EntitySelectorConfig,
-    Selector,
-)
 
 from .const import DOMAIN
 from .models import MAPPING_SPECS, MappingProblemType
+from .selectors import WEATHER_SOURCE_ENTITY_SELECTOR
 
 _MAPPING_ISSUE_PREFIX = "mapping_problem"
 _MAPPING_KEYS = frozenset(spec.option_key for spec in MAPPING_SPECS)
-_WEATHER_ENTITY_SELECTOR: Selector[EntitySelectorConfig] = EntitySelector(  # pyright: ignore[reportUnknownVariableType]
-    EntitySelectorConfig(filter=[{"domain": ["sensor", "input_number"]}])
-)
 
 
 class _MappingProblem(Protocol):
@@ -129,7 +122,7 @@ class MappingRepairFlow(RepairsFlow):
                     vol.Optional(
                         CONF_ENTITY_ID,
                         description={"suggested_value": self._entity_id},
-                    ): _WEATHER_ENTITY_SELECTOR,
+                    ): WEATHER_SOURCE_ENTITY_SELECTOR,
                 }
             ),
             description_placeholders={
