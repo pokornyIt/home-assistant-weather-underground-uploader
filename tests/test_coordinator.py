@@ -1,6 +1,7 @@
 """Tests for upload coordination and operational entities."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,6 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.weather_underground_uploader.api import (
@@ -17,6 +19,7 @@ from custom_components.weather_underground_uploader.api import (
 )
 from custom_components.weather_underground_uploader.const import (
     CONF_HUMIDITY,
+    CONF_MAX_SOURCE_AGE,
     CONF_STATION_ID,
     CONF_STATION_KEY,
     CONF_TEMPERATURE,
@@ -373,6 +376,39 @@ async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant
     assert entry.runtime_data.coordinator is not previous_coordinator
     assert entry.runtime_data.coordinator.update_interval is not None
     assert entry.runtime_data.coordinator.update_interval.total_seconds() == 120
+    upload.assert_awaited_once_with({"tempf": "68"})
+    await _unload_entry(hass, entry)
+
+
+async def test_source_age_option_takes_effect_after_options_reload(hass: HomeAssistant) -> None:
+    """Saving a shorter source age reloads the station and omits old data."""
+    entry = _create_entry(hass)
+    hass.states.async_set(
+        entry.options[CONF_TEMPERATURE],
+        "20",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        timestamp=(dt_util.utcnow() - timedelta(minutes=2)).timestamp(),
+    )
+    upload = AsyncMock()
+
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        previous_coordinator = entry.runtime_data.coordinator
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_MAX_SOURCE_AGE: 1,
+                CONF_TEMPERATURE: entry.options[CONF_TEMPERATURE],
+                CONF_UPLOAD_INTERVAL: entry.options[CONF_UPLOAD_INTERVAL],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert entry.runtime_data.coordinator is not previous_coordinator
+    assert entry.runtime_data.coordinator.data.status is UploadStatus.NO_DATA
     upload.assert_awaited_once_with({"tempf": "68"})
     await _unload_entry(hass, entry)
 

@@ -57,6 +57,7 @@
           "dew_point_entity": "Dew point",
           "hourly_rain_entity": "Hourly rain",
           "humidity_entity": "Relative humidity",
+          "max_source_age": "Maximum source age",
           "pressure_entity": "Barometric pressure",
           "solar_radiation_entity": "Solar radiation",
           "temperature_entity": "Outdoor temperature",
@@ -71,6 +72,7 @@
           "dew_point_entity": "Optional explicit dew point. When omitted, it is calculated from temperature and humidity when possible.",
           "hourly_rain_entity": "Entity providing accumulated rain for the current hour.",
           "humidity_entity": "Entity providing outdoor relative humidity.",
+          "max_source_age": "Maximum time since a source entity last reported before its value is omitted.",
           "pressure_entity": "Entity providing barometric pressure.",
           "solar_radiation_entity": "Entity providing solar irradiance in W/m².",
           "temperature_entity": "Entity providing outdoor temperature.",
@@ -80,7 +82,7 @@
           "wind_gust_entity": "Entity providing wind gust speed.",
           "wind_speed_entity": "Entity providing sustained wind speed."
         },
-        "description": "Choose an upload interval and map any available sensor or numeric helper to the virtual station. Saving the first mapping starts uploads immediately.",
+        "description": "Choose an upload interval and maximum source age, then map any available sensor or numeric helper to the virtual station. Saving the first mapping starts uploads immediately.",
         "title": "Station options"
       }
     }

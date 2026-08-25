@@ -57,6 +57,7 @@
           "dew_point_entity": "Rosný bod",
           "hourly_rain_entity": "Hodinový úhrn srážek",
           "humidity_entity": "Relativní vlhkost",
+          "max_source_age": "Maximální stáří zdroje",
           "pressure_entity": "Barometrický tlak",
           "solar_radiation_entity": "Sluneční záření",
           "temperature_entity": "Venkovní teplota",
@@ -71,6 +72,7 @@
           "dew_point_entity": "Volitelný přímo měřený rosný bod. Pokud není vybrán, vypočítá se podle možností z teploty a vlhkosti.",
           "hourly_rain_entity": "Entita poskytující úhrn srážek od začátku aktuální hodiny.",
           "humidity_entity": "Entita poskytující venkovní relativní vlhkost.",
+          "max_source_age": "Nejdelší doba od posledního nahlášení zdrojové entity, po které je její hodnota ještě použita.",
           "pressure_entity": "Entita poskytující barometrický tlak.",
           "solar_radiation_entity": "Entita poskytující intenzitu slunečního záření ve W/m².",
           "temperature_entity": "Entita poskytující venkovní teplotu.",
@@ -80,7 +82,7 @@
           "wind_gust_entity": "Entita poskytující rychlost nárazu větru.",
           "wind_speed_entity": "Entita poskytující rychlost ustáleného větru."
         },
-        "description": "Zvolte interval odesílání a přiřaďte k virtuální stanici dostupné senzory nebo číselné pomocníky. Uložení prvního přiřazení ihned spustí odesílání.",
+        "description": "Zvolte interval odesílání a maximální stáří zdroje, potom přiřaďte k virtuální stanici dostupné senzory nebo číselné pomocníky. Uložení prvního přiřazení ihned spustí odesílání.",
         "title": "Možnosti stanice"
       }
     }

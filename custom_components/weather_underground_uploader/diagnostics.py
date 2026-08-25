@@ -6,7 +6,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.redact import async_redact_data  # pyright: ignore[reportUnknownVariableType]
 from homeassistant.loader import async_get_integration
 
-from .const import CONF_STATION_KEY, CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_SECONDS, DOMAIN
+from .const import (
+    CONF_MAX_SOURCE_AGE,
+    CONF_STATION_KEY,
+    CONF_UPLOAD_INTERVAL,
+    DEFAULT_MAX_SOURCE_AGE_MINUTES,
+    DEFAULT_UPLOAD_INTERVAL_SECONDS,
+    DOMAIN,
+)
 from .coordinator import mapping_problem_details
 from .models import MAPPING_SPECS
 from .runtime import WeatherUndergroundUploaderConfigEntry
@@ -28,6 +35,12 @@ async def async_get_config_entry_diagnostics(
         },
         "config_entry": async_redact_data(dict(entry.data), _TO_REDACT),
         "configuration": {
+            "max_source_age_minutes": int(
+                entry.options.get(
+                    CONF_MAX_SOURCE_AGE,
+                    DEFAULT_MAX_SOURCE_AGE_MINUTES,
+                )
+            ),
             "upload_interval": int(
                 entry.options.get(
                     CONF_UPLOAD_INTERVAL,

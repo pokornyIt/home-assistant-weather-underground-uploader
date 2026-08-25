@@ -1,8 +1,9 @@
 """Tests for the Weather Underground Uploader config flow."""
 
-from typing import Final
+from typing import Any, Final, cast
 from unittest.mock import AsyncMock, patch
 
+import pytest
 import voluptuous as vol
 import voluptuous_serialize
 from homeassistant import config_entries
@@ -18,12 +19,16 @@ from custom_components.weather_underground_uploader.api import (
 )
 from custom_components.weather_underground_uploader.const import (
     CONF_HUMIDITY,
+    CONF_MAX_SOURCE_AGE,
     CONF_STATION_ID,
     CONF_STATION_KEY,
     CONF_TEMPERATURE,
     CONF_UPLOAD_INTERVAL,
+    DEFAULT_MAX_SOURCE_AGE_MINUTES,
     DEFAULT_UPLOAD_INTERVAL_SECONDS,
     DOMAIN,
+    MAX_SOURCE_AGE_MINUTES,
+    MIN_SOURCE_AGE_MINUTES,
 )
 from custom_components.weather_underground_uploader.models import MAPPING_SPECS
 from custom_components.weather_underground_uploader.selectors import WEATHER_SOURCE_ENTITY_SELECTOR
@@ -141,14 +146,41 @@ class TestConfigFlow:
         data_schema = result["data_schema"]
         assert data_schema is not None
         assert set(data_schema.schema) == {
+            CONF_MAX_SOURCE_AGE,
             CONF_UPLOAD_INTERVAL,
             *(spec.option_key for spec in MAPPING_SPECS),
         }
         mapping_selectors = [
-            validator for key, validator in data_schema.schema.items() if key.schema != CONF_UPLOAD_INTERVAL
+            validator
+            for key, validator in data_schema.schema.items()
+            if key.schema not in {CONF_MAX_SOURCE_AGE, CONF_UPLOAD_INTERVAL}
         ]
         assert mapping_selectors == [WEATHER_SOURCE_ENTITY_SELECTOR] * len(MAPPING_SPECS)
         assert WEATHER_SOURCE_ENTITY_SELECTOR.config["filter"] == [{"domain": ["sensor", "input_number"]}]
+        validated = cast(
+            dict[str, Any],
+            data_schema({CONF_UPLOAD_INTERVAL: DEFAULT_UPLOAD_INTERVAL_SECONDS}),
+        )
+        assert validated[CONF_MAX_SOURCE_AGE] == DEFAULT_MAX_SOURCE_AGE_MINUTES
+        for boundary in (MIN_SOURCE_AGE_MINUTES, MAX_SOURCE_AGE_MINUTES):
+            validated = cast(
+                dict[str, Any],
+                data_schema(
+                    {
+                        CONF_MAX_SOURCE_AGE: boundary,
+                        CONF_UPLOAD_INTERVAL: DEFAULT_UPLOAD_INTERVAL_SECONDS,
+                    }
+                ),
+            )
+            assert validated[CONF_MAX_SOURCE_AGE] == boundary
+        for invalid in (MIN_SOURCE_AGE_MINUTES - 1, MAX_SOURCE_AGE_MINUTES + 1):
+            with pytest.raises(vol.Invalid):
+                data_schema(
+                    {
+                        CONF_MAX_SOURCE_AGE: invalid,
+                        CONF_UPLOAD_INTERVAL: DEFAULT_UPLOAD_INTERVAL_SECONDS,
+                    }
+                )
 
     async def test_options_flow_saves_entity_mappings(self, hass: HomeAssistant) -> None:
         """Submitted entity mappings are stored as config-entry options."""
@@ -168,6 +200,7 @@ class TestConfigFlow:
             {
                 CONF_TEMPERATURE: "sensor.outdoor_temperature",
                 CONF_HUMIDITY: "input_number.outdoor_humidity",
+                CONF_MAX_SOURCE_AGE: 30,
             },
         )
 
@@ -175,6 +208,7 @@ class TestConfigFlow:
         assert entry.options == {
             CONF_TEMPERATURE: "sensor.outdoor_temperature",
             CONF_HUMIDITY: "input_number.outdoor_humidity",
+            CONF_MAX_SOURCE_AGE: 30.0,
             CONF_UPLOAD_INTERVAL: float(DEFAULT_UPLOAD_INTERVAL_SECONDS),
         }
         await hass.async_block_till_done()

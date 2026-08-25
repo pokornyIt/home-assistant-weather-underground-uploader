@@ -10,6 +10,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.weather_underground_uploader.const import (
     CONF_HUMIDITY,
+    CONF_MAX_SOURCE_AGE,
     CONF_STATION_ID,
     CONF_STATION_KEY,
     CONF_TEMPERATURE,
@@ -33,6 +34,7 @@ async def test_config_entry_diagnostics_are_useful_and_redacted(hass: HomeAssist
             CONF_STATION_KEY: TEST_STATION_KEY,
         },
         options={
+            CONF_MAX_SOURCE_AGE: 45,
             CONF_UPLOAD_INTERVAL: 120,
             CONF_TEMPERATURE: "sensor.outdoor_temperature",
             CONF_HUMIDITY: "input_number.outdoor_humidity",
@@ -60,6 +62,7 @@ async def test_config_entry_diagnostics_are_useful_and_redacted(hass: HomeAssist
             CONF_STATION_KEY: REDACTED,
         },
         "configuration": {
+            "max_source_age_minutes": 45,
             "upload_interval": 120,
             "mappings": {
                 CONF_TEMPERATURE: "sensor.outdoor_temperature",
