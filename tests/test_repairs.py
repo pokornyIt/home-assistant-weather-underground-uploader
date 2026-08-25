@@ -26,6 +26,7 @@ from custom_components.weather_underground_uploader.coordinator import (
     PERSISTENT_MAPPING_PROBLEM_OCCURRENCES,
 )
 from custom_components.weather_underground_uploader.repairs import mapping_issue_id
+from custom_components.weather_underground_uploader.selectors import WEATHER_SOURCE_ENTITY_SELECTOR
 
 
 def _create_entry(hass: HomeAssistant, station_id: str = "IPRAGUE1") -> MockConfigEntry:
@@ -173,6 +174,7 @@ async def test_mapping_repair_flow_replaces_only_affected_option(hass: HomeAssis
         data_schema = result["data_schema"]
         assert data_schema is not None
         assert {key.schema for key in data_schema.schema} == {CONF_ENTITY_ID}
+        assert list(data_schema.schema.values()) == [WEATHER_SOURCE_ENTITY_SELECTOR]
 
         replacement = "sensor.replacement_temperature"
         reload_entry = AsyncMock(return_value=True)

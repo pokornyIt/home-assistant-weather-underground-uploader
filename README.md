@@ -125,6 +125,24 @@ temperature and relative humidity pair using the Magnus formula. An explicitly
 mapped dew point takes precedence. A dew point above the corresponding air
 temperature is rejected.
 
+### Helpers and template sensors
+
+Mapping selectors include both `sensor` entities and numeric `input_number`
+helpers. They do not require a particular device, source integration, device
+class, or vendor metadata. This makes helpers and template sensors useful as
+adapters when the original entity does not expose the value in the semantics
+expected above. For example:
+
+- an `input_number.outdoor_humidity` helper configured from 0 to 100 with `%`
+  as its unit can provide relative humidity;
+- a Template helper can expose an unusual temperature source as a numeric
+  `sensor.wu_outdoor_temperature` with `°C` as its unit before it is mapped to
+  **Outdoor temperature**.
+
+The selector only keeps the entity list relevant. The current state, unit, and
+physical range are still validated at upload time, so selecting an entity does
+not make incompatible data valid.
+
 Missing entities, `unknown` or `unavailable` states, non-numeric and non-finite
 values, unsupported units, physically invalid values, and values that have not
 reported for more than one hour are omitted individually. Other valid mapped

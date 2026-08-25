@@ -13,8 +13,6 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
-    EntitySelector,  # pyright: ignore[reportUnknownVariableType]
-    EntitySelectorConfig,
     NumberSelector,  # pyright: ignore[reportUnknownVariableType]
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -36,13 +34,11 @@ from .const import (
 )
 from .mapping import build_observation
 from .models import MAPPING_SPECS
+from .selectors import WEATHER_SOURCE_ENTITY_SELECTOR
 
 _STATION_ID_SCHEMA = vol.All(str, vol.Length(min=1))
 _STATION_KEY_SELECTOR: Selector[TextSelectorConfig] = TextSelector(  # pyright: ignore[reportUnknownVariableType]
     TextSelectorConfig(type=TextSelectorType.PASSWORD)
-)
-_WEATHER_ENTITY_SELECTOR: Selector[EntitySelectorConfig] = EntitySelector(  # pyright: ignore[reportUnknownVariableType]
-    EntitySelectorConfig(filter=[{"domain": ["sensor", "input_number"]}])
 )
 _UPLOAD_INTERVAL_SELECTOR: Selector[NumberSelectorConfig] = NumberSelector(  # pyright: ignore[reportUnknownVariableType]
     NumberSelectorConfig(
@@ -204,7 +200,7 @@ class WeatherUndergroundUploaderOptionsFlow(OptionsFlowWithReload):
                         vol.Optional(
                             spec.option_key,
                             description={"suggested_value": self.config_entry.options.get(spec.option_key)},
-                        ): _WEATHER_ENTITY_SELECTOR
+                        ): WEATHER_SOURCE_ENTITY_SELECTOR
                         for spec in MAPPING_SPECS
                     },
                 }
