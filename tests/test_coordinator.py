@@ -3,9 +3,11 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.weather_underground_uploader.api import (
@@ -112,7 +114,7 @@ async def test_empty_observation_does_not_call_api(hass: HomeAssistant) -> None:
 
 
 async def test_unmapped_station_remains_idle_and_unscheduled(hass: HomeAssistant) -> None:
-    """A station without mappings stays idle and disables manual upload."""
+    """A station without mappings stays idle and disables test upload."""
     entry = _create_entry(hass, mapped=False)
     upload = AsyncMock()
     with patch.object(WeatherUndergroundClient, "async_upload", upload):
@@ -125,7 +127,7 @@ async def test_unmapped_station_remains_idle_and_unscheduled(hass: HomeAssistant
     assert coordinator.data.status is UploadStatus.IDLE
     assert coordinator.data.last_attempt is None
     assert coordinator.data.consecutive_failures == 0
-    button_state = hass.states.get("button.weather_underground_iprague1_upload_now")
+    button_state = hass.states.get("button.weather_underground_iprague1_test_upload")
     assert button_state is not None and button_state.state == STATE_UNAVAILABLE
     await _unload_entry(hass, entry)
 
@@ -213,6 +215,44 @@ async def test_concurrent_refreshes_do_not_overlap(hass: HomeAssistant) -> None:
     await _unload_entry(hass, entry)
 
 
+async def test_test_upload_does_not_overlap_scheduled_upload(hass: HomeAssistant) -> None:
+    """Test and normal uploads share the station request lock."""
+    entry = _create_entry(hass)
+    first_started = asyncio.Event()
+    release_first = asyncio.Event()
+    active = 0
+    maximum_active = 0
+    calls = 0
+
+    async def slow_upload(_client: WeatherUndergroundClient, _observation: dict[str, str]) -> None:
+        nonlocal active, calls, maximum_active
+        calls += 1
+        active += 1
+        maximum_active = max(maximum_active, active)
+        if calls == 1:
+            first_started.set()
+            await release_first.wait()
+        active -= 1
+
+    with (
+        patch.object(WeatherUndergroundClient, "async_upload", slow_upload),
+        patch.object(WeatherUndergroundUploadCoordinator, "async_config_entry_first_refresh", AsyncMock()),
+    ):
+        await _setup_entry(hass, entry)
+        coordinator = entry.runtime_data.coordinator
+        scheduled = asyncio.create_task(coordinator.async_refresh())
+        await first_started.wait()
+        test = asyncio.create_task(coordinator.async_test_upload())
+        await asyncio.sleep(0)
+        assert calls == 1
+        release_first.set()
+        await asyncio.gather(scheduled, test)
+
+    assert calls == 2
+    assert maximum_active == 1
+    await _unload_entry(hass, entry)
+
+
 async def test_stations_have_independent_coordinators(hass: HomeAssistant) -> None:
     """Each config entry owns its client, interval, and coordinator state."""
     first = _create_entry(hass, station_id="IPRAGUE1", interval=120)
@@ -266,21 +306,94 @@ async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant
     await _unload_entry(hass, entry)
 
 
-async def test_manual_upload_button_requests_refresh(hass: HomeAssistant) -> None:
-    """Pressing the station button runs the same serialized upload path."""
+async def test_upload_button_sends_test_observation(hass: HomeAssistant) -> None:
+    """A successful test uploads current data without changing operational state."""
     entry = _create_entry(hass)
     upload = AsyncMock()
     with patch.object(WeatherUndergroundClient, "async_upload", upload):
         await _setup_entry(hass, entry)
+        state_before_test = entry.runtime_data.coordinator.data
         upload.reset_mock()
         await hass.services.async_call(
             "button",
             "press",
-            {"entity_id": "button.weather_underground_iprague1_upload_now"},
+            {"entity_id": "button.weather_underground_iprague1_test_upload"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
     upload.assert_awaited_once_with({"tempf": "68"})
-    assert entry.runtime_data.coordinator.data.status is UploadStatus.SUCCESS
+    assert entry.runtime_data.coordinator.data is state_before_test
+    await _unload_entry(hass, entry)
+
+
+async def test_test_upload_reports_invalid_credentials_and_starts_reauth(hass: HomeAssistant) -> None:
+    """A rejected test upload reports invalid credentials without changing counters."""
+    entry = _create_entry(hass)
+    upload = AsyncMock(side_effect=[None, WeatherUndergroundAuthenticationError("rejected")])
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        state_before_test = entry.runtime_data.coordinator.data
+
+        with pytest.raises(HomeAssistantError) as error:
+            await hass.services.async_call(
+                "button",
+                "press",
+                {"entity_id": "button.weather_underground_iprague1_test_upload"},
+                blocking=True,
+            )
+        await hass.async_block_till_done()
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "test_upload_invalid_auth"
+    assert entry.runtime_data.coordinator.data is state_before_test
+    assert len(list(entry.async_get_active_flows(hass, {"reauth"}))) == 1
+    await _unload_entry(hass, entry)
+
+
+async def test_test_upload_reports_transient_failure(hass: HomeAssistant) -> None:
+    """A transient test failure is distinct from invalid credentials."""
+    entry = _create_entry(hass)
+    upload = AsyncMock(side_effect=[None, WeatherUndergroundConnectionError("temporary failure")])
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        state_before_test = entry.runtime_data.coordinator.data
+
+        with pytest.raises(HomeAssistantError) as error:
+            await hass.services.async_call(
+                "button",
+                "press",
+                {"entity_id": "button.weather_underground_iprague1_test_upload"},
+                blocking=True,
+            )
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "test_upload_failed"
+    assert entry.runtime_data.coordinator.data is state_before_test
+    assert not list(entry.async_get_active_flows(hass, {"reauth"}))
+    await _unload_entry(hass, entry)
+
+
+async def test_test_upload_requires_a_currently_valid_measurement(hass: HomeAssistant) -> None:
+    """A configured mapping without valid data produces an actionable error."""
+    entry = _create_entry(hass)
+    upload = AsyncMock()
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        state_before_test = entry.runtime_data.coordinator.data
+        upload.reset_mock()
+        hass.states.async_remove(entry.options[CONF_TEMPERATURE])
+
+        with pytest.raises(ServiceValidationError) as error:
+            await hass.services.async_call(
+                "button",
+                "press",
+                {"entity_id": "button.weather_underground_iprague1_test_upload"},
+                blocking=True,
+            )
+
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "test_upload_no_data"
+    upload.assert_not_awaited()
+    assert entry.runtime_data.coordinator.data is state_before_test
     await _unload_entry(hass, entry)
