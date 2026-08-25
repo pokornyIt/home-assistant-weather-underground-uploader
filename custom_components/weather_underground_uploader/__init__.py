@@ -8,6 +8,7 @@ from .api import WeatherUndergroundClient
 from .const import CONF_STATION_ID, CONF_STATION_KEY
 from .coordinator import WeatherUndergroundUploadCoordinator
 from .entity import async_migrate_station_registry
+from .repairs import async_sync_mapping_issues
 from .runtime import WeatherUndergroundUploaderConfigEntry, WeatherUndergroundUploaderRuntimeData
 
 PLATFORMS = (Platform.SENSOR, Platform.BUTTON)
@@ -31,6 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherUndergroundUpload
     entry.runtime_data = WeatherUndergroundUploaderRuntimeData(client, coordinator)
     if coordinator.upload_enabled:
         await coordinator.async_config_entry_first_refresh()
+    else:
+        async_sync_mapping_issues(hass, entry, {})
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

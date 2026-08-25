@@ -126,5 +126,24 @@
     "test_upload_no_data": {
       "message": "Testovací odeslání vyžaduje alespoň jednu přiřazenou veličinu s aktuálně platnou hodnotou a podporovanou jednotkou. Zkontrolujte možnosti stanice a stav zdrojové entity."
     }
+  },
+  "issues": {
+    "mapping_problem": {
+      "fix_flow": {
+        "step": {
+          "mapping": {
+            "data": {
+              "entity_id": "Náhradní zdrojová entita"
+            },
+            "data_description": {
+              "entity_id": "Vyberte platný senzor nebo číselný pomocník. Vymazáním výběru toto přiřazení odstraníte."
+            },
+            "description": "Přiřazení `{mapping}` se zdrojem `{entity_id}` stanice {station} nebylo použitelné alespoň ve třech po sobě jdoucích cyklech odesílání. Vyberte náhradní entitu, nebo vymazáním pole toto přiřazení odstraňte.",
+            "title": "Opravit přiřazení stanice"
+          }
+        }
+      },
+      "title": "Přiřazená entita {entity_id} vyžaduje pozornost pro stanici {station}"
+    }
   }
 }

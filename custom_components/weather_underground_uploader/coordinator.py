@@ -18,6 +18,7 @@ from .api import WeatherUndergroundAuthenticationError, WeatherUndergroundClient
 from .const import CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_SECONDS
 from .mapping import build_observation, build_observation_result
 from .models import MappingProblemType, MappingValidationProblem, has_configured_mapping
+from .repairs import async_sync_mapping_issues
 
 _LOGGER = logging.getLogger(__name__)
 PERSISTENT_MAPPING_PROBLEM_OCCURRENCES: Final = 3
@@ -215,3 +216,4 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
                 )
 
         self._mapping_problems = updated
+        async_sync_mapping_issues(self.hass, self._entry, self._mapping_problems)
