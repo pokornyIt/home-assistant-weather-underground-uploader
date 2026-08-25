@@ -130,6 +130,13 @@ values, unsupported units, physically invalid values, and values that have not
 reported for more than one hour are omitted individually. Other valid mapped
 values remain eligible for upload.
 
+Each omitted configured mapping is classified independently. The upload status
+sensor exposes current problems in its `mapping_problems` attribute, keyed by
+the mapping option. A problem is initially transient and becomes persistent
+after it is detected in three consecutive normal upload cycles. It disappears
+automatically when the mapping produces a valid value again. Test uploads do
+not advance this operational tracking.
+
 ### Rainfall semantics
 
 A wet/dry, raining/not-raining, contact, moisture, or other qualitative binary
@@ -218,9 +225,9 @@ To download diagnostics, open **Settings > Devices & services**, select
 and select **Download diagnostics**.
 
 Diagnostics include the integration version, Station ID, configured entity
-mappings, upload interval, and non-sensitive upload state. The Station Key is
-redacted. Entity IDs can still reveal details about your installation, so
-review the file before sharing it publicly.
+mappings, upload interval, non-sensitive upload state, and current structured
+mapping problems. The Station Key is redacted. Entity IDs can still reveal
+details about your installation, so review the file before sharing it publicly.
 
 When reporting a problem, include:
 

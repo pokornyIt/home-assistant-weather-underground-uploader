@@ -48,6 +48,8 @@ async def test_config_entry_diagnostics_are_useful_and_redacted(hass: HomeAssist
         last_success=None,
         consecutive_failures=3,
     )
+    mapping_problems = entry.runtime_data.coordinator.mapping_problems
+    assert set(mapping_problems) == {CONF_TEMPERATURE, CONF_HUMIDITY}
 
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 
@@ -69,6 +71,17 @@ async def test_config_entry_diagnostics_are_useful_and_redacted(hass: HomeAssist
             "last_attempt": "2026-08-22T12:30:00+00:00",
             "last_success": None,
             "consecutive_failures": 3,
+        },
+        "mapping_problems": {
+            mapping_key: {
+                "entity_id": problem.entity_id,
+                "type": "missing_entity",
+                "first_detected": problem.first_detected.isoformat(),
+                "last_detected": problem.last_detected.isoformat(),
+                "consecutive_occurrences": 1,
+                "persistent": False,
+            }
+            for mapping_key, problem in mapping_problems.items()
         },
     }
     assert TEST_STATION_KEY not in json.dumps(diagnostics)

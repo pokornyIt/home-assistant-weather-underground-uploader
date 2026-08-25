@@ -9,6 +9,7 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPressure,
@@ -31,7 +32,8 @@ from custom_components.weather_underground_uploader.const import (
     CONF_WIND_GUST,
     CONF_WIND_SPEED,
 )
-from custom_components.weather_underground_uploader.mapping import build_observation
+from custom_components.weather_underground_uploader.mapping import build_observation, build_observation_result
+from custom_components.weather_underground_uploader.models import MappingProblemType
 
 UNIT: Final = ATTR_UNIT_OF_MEASUREMENT
 
@@ -119,28 +121,39 @@ def test_imperial_solar_radiation_is_normalized(hass: HomeAssistant) -> None:
 
 
 def test_invalid_values_are_omitted_independently(hass: HomeAssistant) -> None:
-    """Bad optional mappings do not suppress a valid mapping."""
+    """Bad optional mappings are classified without suppressing a valid mapping."""
     _set_measurement(hass, "sensor.valid", 55, PERCENTAGE)
     _set_measurement(hass, "sensor.unavailable", STATE_UNAVAILABLE, UnitOfTemperature.CELSIUS)
+    _set_measurement(hass, "sensor.unknown", STATE_UNKNOWN, UnitOfTemperature.CELSIUS)
     _set_measurement(hass, "sensor.non_numeric", "wet", UnitOfLength.MILLIMETERS)
     _set_measurement(hass, "sensor.non_finite", "nan", UnitOfSpeed.METERS_PER_SECOND)
     _set_measurement(hass, "sensor.bad_range", -1)
     _set_measurement(hass, "sensor.bad_unit", 20, UnitOfLength.METERS)
 
-    observation = build_observation(
+    result = build_observation_result(
         hass,
         {
             CONF_HUMIDITY: "sensor.valid",
             CONF_TEMPERATURE: "sensor.unavailable",
-            CONF_DAILY_RAIN: "sensor.non_numeric",
+            CONF_DEW_POINT: "sensor.unknown",
+            CONF_HOURLY_RAIN: "sensor.non_numeric",
             CONF_WIND_SPEED: "sensor.non_finite",
             CONF_UV_INDEX: "sensor.bad_range",
             CONF_PRESSURE: "sensor.bad_unit",
-            CONF_WIND_GUST: "sensor.missing",
+            CONF_DAILY_RAIN: "sensor.missing",
         },
     )
 
-    assert observation == {"humidity": "55"}
+    assert result.observation == {"humidity": "55"}
+    assert {problem.mapping_key: problem.problem_type for problem in result.problems} == {
+        CONF_TEMPERATURE: MappingProblemType.UNAVAILABLE,
+        CONF_PRESSURE: MappingProblemType.UNSUPPORTED_UNIT,
+        CONF_DEW_POINT: MappingProblemType.UNKNOWN,
+        CONF_WIND_SPEED: MappingProblemType.NON_FINITE,
+        CONF_HOURLY_RAIN: MappingProblemType.NON_NUMERIC,
+        CONF_DAILY_RAIN: MappingProblemType.MISSING_ENTITY,
+        CONF_UV_INDEX: MappingProblemType.OUT_OF_RANGE,
+    }
 
 
 def test_stale_value_is_omitted(hass: HomeAssistant) -> None:
@@ -153,9 +166,30 @@ def test_stale_value_is_omitted(hass: HomeAssistant) -> None:
         timestamp=(now - timedelta(hours=2)).timestamp(),
     )
 
-    observation = build_observation(hass, {CONF_TEMPERATURE: "sensor.temperature"}, now=now)
+    result = build_observation_result(hass, {CONF_TEMPERATURE: "sensor.temperature"}, now=now)
 
-    assert observation == {}
+    assert result.observation == {}
+    assert len(result.problems) == 1
+    assert result.problems[0].problem_type is MappingProblemType.STALE
+
+
+def test_incompatible_dew_point_is_reported(hass: HomeAssistant) -> None:
+    """A dew point above air temperature is omitted and classified independently."""
+    _set_measurement(hass, "sensor.temperature", 10, UnitOfTemperature.CELSIUS)
+    _set_measurement(hass, "sensor.dew_point", 20, UnitOfTemperature.CELSIUS)
+
+    result = build_observation_result(
+        hass,
+        {
+            CONF_TEMPERATURE: "sensor.temperature",
+            CONF_DEW_POINT: "sensor.dew_point",
+        },
+    )
+
+    assert result.observation == {"tempf": "50"}
+    assert len(result.problems) == 1
+    assert result.problems[0].mapping_key == CONF_DEW_POINT
+    assert result.problems[0].problem_type is MappingProblemType.OUT_OF_RANGE
 
 
 def test_dew_point_is_calculated_when_not_mapped(hass: HomeAssistant) -> None:

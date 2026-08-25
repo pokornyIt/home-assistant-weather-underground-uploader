@@ -29,11 +29,17 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .const import CONF_DEW_POINT
-from .models import MAPPING_SPECS, MappingSpec, MeasurementKind
+from .models import (
+    MAPPING_SPECS,
+    MappingProblemType,
+    MappingSpec,
+    MappingValidationProblem,
+    MeasurementKind,
+    ObservationResult,
+)
 
 DEFAULT_MAX_STATE_AGE: Final = timedelta(hours=1)
 
-_UNAVAILABLE_STATES: Final = frozenset({"", STATE_UNAVAILABLE, STATE_UNKNOWN})
 _ABSOLUTE_ZERO_FAHRENHEIT: Final = -459.67
 _MAGNUS_A: Final = 17.625
 _MAGNUS_B_CELSIUS: Final = 243.04
@@ -58,8 +64,32 @@ def build_observation(
     :param max_state_age: Maximum age since an entity last reported.
     :return: Normalized Weather Underground protocol fields.
     """
+    return build_observation_result(
+        hass,
+        options,
+        now=now,
+        max_state_age=max_state_age,
+    ).observation
+
+
+def build_observation_result(
+    hass: HomeAssistant,
+    options: Mapping[str, object],
+    *,
+    now: datetime | None = None,
+    max_state_age: timedelta = DEFAULT_MAX_STATE_AGE,
+) -> ObservationResult:
+    """Build an observation and classify every unusable configured mapping.
+
+    :param hass: Home Assistant instance whose state machine is read now.
+    :param options: Config-entry options containing entity mappings.
+    :param now: Current UTC time override for deterministic tests.
+    :param max_state_age: Maximum age since an entity last reported.
+    :return: Normalized fields and current non-sensitive mapping problems.
+    """
     current_time = now or dt_util.utcnow()
     normalized: dict[str, float] = {}
+    problems: list[MappingValidationProblem] = []
 
     for spec in MAPPING_SPECS:
         entity_id = options.get(spec.option_key)
@@ -67,9 +97,17 @@ def build_observation(
             continue
 
         state = hass.states.get(entity_id)
-        value = _normalize_state(state, spec, current_time, max_state_age)
+        value, problem_type = _normalize_state(state, spec, current_time, max_state_age)
         if value is not None:
             normalized[spec.protocol_field] = value
+        elif problem_type is not None:
+            problems.append(
+                MappingValidationProblem(
+                    mapping_key=spec.option_key,
+                    entity_id=entity_id,
+                    problem_type=problem_type,
+                )
+            )
 
     dew_point_entity = options.get(CONF_DEW_POINT)
     has_explicit_dew_point = isinstance(dew_point_entity, str) and bool(dew_point_entity)
@@ -80,8 +118,19 @@ def build_observation(
 
     if "dewptf" in normalized and "tempf" in normalized and normalized["dewptf"] > normalized["tempf"]:
         del normalized["dewptf"]
+        if isinstance(dew_point_entity, str) and dew_point_entity:
+            problems.append(
+                MappingValidationProblem(
+                    mapping_key=CONF_DEW_POINT,
+                    entity_id=dew_point_entity,
+                    problem_type=MappingProblemType.OUT_OF_RANGE,
+                )
+            )
 
-    return {field: _format_value(value) for field, value in normalized.items()}
+    return ObservationResult(
+        observation={field: _format_value(value) for field, value in normalized.items()},
+        problems=tuple(problems),
+    )
 
 
 def _normalize_state(
@@ -89,32 +138,41 @@ def _normalize_state(
     spec: MappingSpec,
     now: datetime,
     max_state_age: timedelta,
-) -> float | None:
-    """Return one normalized finite value when its state is usable."""
-    if state is None or state.state.strip().lower() in _UNAVAILABLE_STATES:
-        return None
+) -> tuple[float | None, MappingProblemType | None]:
+    """Return a normalized value or the exact reason it is unusable."""
+    if state is None:
+        return None, MappingProblemType.MISSING_ENTITY
+
+    raw_state = state.state.strip()
+    normalized_state = raw_state.lower()
+    if not raw_state or normalized_state == STATE_UNAVAILABLE:
+        return None, MappingProblemType.UNAVAILABLE
+    if normalized_state == STATE_UNKNOWN:
+        return None, MappingProblemType.UNKNOWN
     if max_state_age < timedelta(0) or now - state.last_reported > max_state_age:
-        return None
+        return None, MappingProblemType.STALE
 
     try:
-        value = float(state.state)
+        value = float(raw_state)
     except ValueError:
-        return None
+        return None, MappingProblemType.NON_NUMERIC
     if not math.isfinite(value):
-        return None
+        return None, MappingProblemType.NON_FINITE
 
     unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     if unit is not None and not isinstance(unit, str):
-        return None
+        return None, MappingProblemType.UNSUPPORTED_UNIT
 
     try:
         normalized = _convert_value(value, unit, spec.kind)
     except HomeAssistantError:
-        return None
+        return None, MappingProblemType.UNSUPPORTED_UNIT
 
-    if not math.isfinite(normalized) or not _is_in_physical_range(normalized, spec.kind):
-        return None
-    return normalized
+    if not math.isfinite(normalized):
+        return None, MappingProblemType.NON_FINITE
+    if not _is_in_physical_range(normalized, spec.kind):
+        return None, MappingProblemType.OUT_OF_RANGE
+    return normalized, None
 
 
 def _convert_value(value: float, unit: str | None, kind: MeasurementKind) -> float:
