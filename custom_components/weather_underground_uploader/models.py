@@ -33,6 +33,19 @@ class MeasurementKind(StrEnum):
     SOLAR_RADIATION = "solar_radiation"
 
 
+class MappingProblemType(StrEnum):
+    """Reason a configured measurement cannot be uploaded."""
+
+    MISSING_ENTITY = "missing_entity"
+    UNAVAILABLE = "unavailable"
+    UNKNOWN = "unknown"
+    NON_NUMERIC = "non_numeric"
+    NON_FINITE = "non_finite"
+    UNSUPPORTED_UNIT = "unsupported_unit"
+    OUT_OF_RANGE = "out_of_range"
+    STALE = "stale"
+
+
 @dataclass(frozen=True, slots=True)
 class MappingSpec:
     """Describe one Home Assistant to Weather Underground field mapping."""
@@ -40,6 +53,23 @@ class MappingSpec:
     option_key: str
     protocol_field: str
     kind: MeasurementKind
+
+
+@dataclass(frozen=True, slots=True)
+class MappingValidationProblem:
+    """Describe one currently unusable configured mapping."""
+
+    mapping_key: str
+    entity_id: str
+    problem_type: MappingProblemType
+
+
+@dataclass(frozen=True, slots=True)
+class ObservationResult:
+    """Normalized upload fields and independently detected mapping problems."""
+
+    observation: dict[str, str]
+    problems: tuple[MappingValidationProblem, ...]
 
 
 MAPPING_SPECS: Final = (

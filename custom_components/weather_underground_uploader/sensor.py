@@ -2,12 +2,18 @@
 
 from collections.abc import Callable
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import UploadState, UploadStatus, WeatherUndergroundUploadCoordinator
+from .coordinator import (
+    UploadState,
+    UploadStatus,
+    WeatherUndergroundUploadCoordinator,
+    mapping_problem_details,
+)
 from .entity import station_device_info, station_entity_unique_id
 from .runtime import WeatherUndergroundUploaderConfigEntry
 
@@ -59,6 +65,18 @@ class WeatherUndergroundStatusSensor(WeatherUndergroundOperationalSensor):
             ),
             lambda state: state.status.value,
         )
+        self._attr_extra_state_attributes = {
+            "mapping_problems": mapping_problem_details(self._coordinator.mapping_problems),
+        }
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Refresh upload state and structured mapping problem attributes."""
+        self._attr_extra_state_attributes = {
+            "mapping_problems": mapping_problem_details(self._coordinator.mapping_problems),
+        }
+        super()._handle_coordinator_update()
 
 
 async def async_setup_entry(

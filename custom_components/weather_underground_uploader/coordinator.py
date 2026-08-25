@@ -2,10 +2,11 @@
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Any, override
+from typing import Any, Final, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -15,10 +16,11 @@ from homeassistant.util import dt as dt_util
 
 from .api import WeatherUndergroundAuthenticationError, WeatherUndergroundClient, WeatherUndergroundError
 from .const import CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_SECONDS
-from .mapping import build_observation
-from .models import has_configured_mapping
+from .mapping import build_observation, build_observation_result
+from .models import MappingProblemType, MappingValidationProblem, has_configured_mapping
 
 _LOGGER = logging.getLogger(__name__)
+PERSISTENT_MAPPING_PROBLEM_OCCURRENCES: Final = 3
 
 
 class UploadStatus(StrEnum):
@@ -39,6 +41,40 @@ class UploadState:
     last_attempt: datetime | None = None
     last_success: datetime | None = None
     consecutive_failures: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class MappingProblemState:
+    """Track one mapping problem across consecutive upload cycles."""
+
+    mapping_key: str
+    entity_id: str
+    problem_type: MappingProblemType
+    first_detected: datetime
+    last_detected: datetime
+    consecutive_occurrences: int = 1
+
+    @property
+    def persistent(self) -> bool:
+        """Return whether the problem has repeated enough to be actionable."""
+        return self.consecutive_occurrences >= PERSISTENT_MAPPING_PROBLEM_OCCURRENCES
+
+
+def mapping_problem_details(
+    problems: Mapping[str, MappingProblemState],
+) -> dict[str, dict[str, str | int | bool]]:
+    """Serialize current mapping problems without station credentials."""
+    return {
+        mapping_key: {
+            "entity_id": problem.entity_id,
+            "type": problem.problem_type.value,
+            "first_detected": problem.first_detected.isoformat(),
+            "last_detected": problem.last_detected.isoformat(),
+            "consecutive_occurrences": problem.consecutive_occurrences,
+            "persistent": problem.persistent,
+        }
+        for mapping_key, problem in problems.items()
+    }
 
 
 class TestUploadNoDataError(Exception):
@@ -74,6 +110,12 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
         self._client = client
         self._upload_lock = asyncio.Lock()
         self._transient_failure_logged = False
+        self._mapping_problems: dict[str, MappingProblemState] = {}
+
+    @property
+    def mapping_problems(self) -> Mapping[str, MappingProblemState]:
+        """Return currently detected problems keyed by mapped measurement."""
+        return self._mapping_problems
 
     async def async_test_upload(self) -> None:
         """Send a test observation without changing normal upload state.
@@ -95,7 +137,9 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
             return self.data
 
         attempted_at = dt_util.utcnow()
-        observation = build_observation(self.hass, self._entry.options, now=attempted_at)
+        result = build_observation_result(self.hass, self._entry.options, now=attempted_at)
+        self._update_mapping_problems(result.problems, attempted_at)
+        observation = result.observation
         if not observation:
             return UploadState(
                 status=UploadStatus.NO_DATA,
@@ -138,3 +182,36 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
             last_success=attempted_at,
             consecutive_failures=0,
         )
+
+    def _update_mapping_problems(
+        self,
+        current_problems: tuple[MappingValidationProblem, ...],
+        detected_at: datetime,
+    ) -> None:
+        """Advance consecutive problem state and drop recovered mappings."""
+        updated: dict[str, MappingProblemState] = {}
+        for current in current_problems:
+            previous = self._mapping_problems.get(current.mapping_key)
+            if (
+                previous is not None
+                and previous.entity_id == current.entity_id
+                and previous.problem_type is current.problem_type
+            ):
+                updated[current.mapping_key] = MappingProblemState(
+                    mapping_key=current.mapping_key,
+                    entity_id=current.entity_id,
+                    problem_type=current.problem_type,
+                    first_detected=previous.first_detected,
+                    last_detected=detected_at,
+                    consecutive_occurrences=previous.consecutive_occurrences + 1,
+                )
+            else:
+                updated[current.mapping_key] = MappingProblemState(
+                    mapping_key=current.mapping_key,
+                    entity_id=current.entity_id,
+                    problem_type=current.problem_type,
+                    first_detected=detected_at,
+                    last_detected=detected_at,
+                )
+
+        self._mapping_problems = updated

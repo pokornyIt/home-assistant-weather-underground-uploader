@@ -16,6 +16,7 @@ from custom_components.weather_underground_uploader.api import (
     WeatherUndergroundConnectionError,
 )
 from custom_components.weather_underground_uploader.const import (
+    CONF_HUMIDITY,
     CONF_STATION_ID,
     CONF_STATION_KEY,
     CONF_TEMPERATURE,
@@ -23,9 +24,11 @@ from custom_components.weather_underground_uploader.const import (
     DOMAIN,
 )
 from custom_components.weather_underground_uploader.coordinator import (
+    PERSISTENT_MAPPING_PROBLEM_OCCURRENCES,
     UploadStatus,
     WeatherUndergroundUploadCoordinator,
 )
+from custom_components.weather_underground_uploader.models import MappingProblemType
 
 
 def _create_entry(
@@ -110,6 +113,70 @@ async def test_empty_observation_does_not_call_api(hass: HomeAssistant) -> None:
     upload.assert_not_awaited()
     assert entry.runtime_data.coordinator.data.status is UploadStatus.NO_DATA
     assert entry.runtime_data.coordinator.data.consecutive_failures == 1
+    await _unload_entry(hass, entry)
+
+
+async def test_mapping_problem_becomes_persistent_and_recovers(hass: HomeAssistant) -> None:
+    """Repeated invalid data is structured while valid mappings keep uploading."""
+    entry = _create_entry(hass)
+    temperature_entity = entry.options[CONF_TEMPERATURE]
+    humidity_entity = "sensor.iprague1_humidity"
+    hass.states.async_set(temperature_entity, STATE_UNAVAILABLE)
+    hass.states.async_set(humidity_entity, "55")
+    hass.config_entries.async_update_entry(
+        entry,
+        options={**entry.options, CONF_HUMIDITY: humidity_entity},
+    )
+    upload = AsyncMock()
+
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        coordinator = entry.runtime_data.coordinator
+        problem = coordinator.mapping_problems[CONF_TEMPERATURE]
+        assert problem.problem_type is MappingProblemType.UNAVAILABLE
+        assert problem.consecutive_occurrences == 1
+        assert not problem.persistent
+        assert coordinator.data.status is UploadStatus.SUCCESS
+
+        await coordinator.async_test_upload()
+        assert coordinator.mapping_problems[CONF_TEMPERATURE].consecutive_occurrences == 1
+
+        await coordinator.async_refresh()
+        await coordinator.async_refresh()
+
+        problem = coordinator.mapping_problems[CONF_TEMPERATURE]
+        assert problem.consecutive_occurrences == PERSISTENT_MAPPING_PROBLEM_OCCURRENCES
+        assert problem.persistent
+        status = hass.states.get("sensor.weather_underground_iprague1_upload_status")
+        assert status is not None
+        assert status.attributes["mapping_problems"][CONF_TEMPERATURE] == {
+            "entity_id": temperature_entity,
+            "type": "unavailable",
+            "first_detected": problem.first_detected.isoformat(),
+            "last_detected": problem.last_detected.isoformat(),
+            "consecutive_occurrences": PERSISTENT_MAPPING_PROBLEM_OCCURRENCES,
+            "persistent": True,
+        }
+
+        hass.states.async_set(
+            temperature_entity,
+            "20",
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
+        await coordinator.async_refresh()
+
+    assert coordinator.mapping_problems == {}
+    assert coordinator.data.status is UploadStatus.SUCCESS
+    assert coordinator.data.consecutive_failures == 0
+    assert upload.await_count == PERSISTENT_MAPPING_PROBLEM_OCCURRENCES + 2
+    assert upload.await_args is not None
+    recovered_observation = upload.await_args.args[0]
+    assert recovered_observation["tempf"] == "68"
+    assert recovered_observation["humidity"] == "55"
+    assert "dewptf" in recovered_observation
+    recovered_status = hass.states.get("sensor.weather_underground_iprague1_upload_status")
+    assert recovered_status is not None
+    assert recovered_status.attributes["mapping_problems"] == {}
     await _unload_entry(hass, entry)
 
 
