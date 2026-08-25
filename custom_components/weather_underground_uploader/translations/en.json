@@ -71,6 +71,9 @@
   },
   "entity": {
     "button": {
+      "test_upload": {
+        "name": "Test upload"
+      },
       "upload_now": {
         "name": "Upload now"
       }
@@ -95,6 +98,17 @@
           "success": "Success"
         }
       }
+    }
+  },
+  "exceptions": {
+    "test_upload_failed": {
+      "message": "The test upload could not be completed because Weather Underground is unavailable or returned an unexpected response. Try again later."
+    },
+    "test_upload_invalid_auth": {
+      "message": "Weather Underground rejected the Station ID or Station Key. Check the station credentials and complete the reauthentication request."
+    },
+    "test_upload_no_data": {
+      "message": "The test upload needs at least one mapped measurement with a currently valid value and supported unit. Check the station options and source entity state."
     }
   }
 }

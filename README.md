@@ -137,9 +137,12 @@ the correct accumulation period before mapping it.
 
 ## Upload operation
 
-Observations are rebuilt immediately before each upload. Scheduled and manual
-uploads for the same station are serialized, so they cannot overlap. Select the
-station's **Upload now** button to request an immediate cycle.
+Observations are rebuilt immediately before each upload. Scheduled, manual, and
+test uploads for the same station are serialized, so they cannot overlap.
+Select **Upload now** to request an immediate normal cycle, or **Test upload**
+to verify the station credentials with the currently valid mapped measurements.
+A test upload does not change the normal upload status, timestamps, or failure
+counter.
 
 Temporary network and Weather Underground service failures keep the integration
 loaded and retry on the next scheduled cycle. The first failure is logged as a
@@ -154,7 +157,12 @@ Each station exposes:
 - **Last upload attempt**;
 - **Last successful upload**;
 - **Consecutive failures**;
-- **Upload now** button.
+- **Upload now** button;
+- **Test upload** button.
+
+The test requires at least one mapped measurement with a currently valid value
+and supported unit. Invalid credentials start Home Assistant reauthentication;
+temporary Weather Underground or network failures are reported separately.
 
 `No data` means no mapped value was usable during that cycle. It increments the
 failure count but does not send an empty request.

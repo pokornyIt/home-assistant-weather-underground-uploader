@@ -71,6 +71,9 @@
   },
   "entity": {
     "button": {
+      "test_upload": {
+        "name": "Testovací odeslání"
+      },
       "upload_now": {
         "name": "Odeslat nyní"
       }
@@ -95,6 +98,17 @@
           "success": "Úspěšné"
         }
       }
+    }
+  },
+  "exceptions": {
+    "test_upload_failed": {
+      "message": "Testovací odeslání se nepodařilo dokončit, protože služba Weather Underground není dostupná nebo vrátila neočekávanou odpověď. Zkuste to znovu později."
+    },
+    "test_upload_invalid_auth": {
+      "message": "Služba Weather Underground odmítla Station ID nebo Station Key. Zkontrolujte přihlašovací údaje stanice a dokončete požadavek na opětovné ověření."
+    },
+    "test_upload_no_data": {
+      "message": "Testovací odeslání vyžaduje alespoň jednu přiřazenou veličinu s aktuálně platnou hodnotou a podporovanou jednotkou. Zkontrolujte možnosti stanice a stav zdrojové entity."
     }
   }
 }

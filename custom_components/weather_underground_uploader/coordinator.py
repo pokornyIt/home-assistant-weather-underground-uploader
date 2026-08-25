@@ -1,5 +1,6 @@
 """Coordinate Weather Underground uploads for one config entry."""
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -40,6 +41,10 @@ class UploadState:
     consecutive_failures: int = 0
 
 
+class TestUploadNoDataError(Exception):
+    """Raised when no currently valid mapped measurement can be tested."""
+
+
 class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
     """Schedule serialized uploads and publish their operational state."""
 
@@ -67,7 +72,21 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
         self.data = UploadState()
         self._entry = entry
         self._client = client
+        self._upload_lock = asyncio.Lock()
         self._transient_failure_logged = False
+
+    async def async_test_upload(self) -> None:
+        """Send a test observation without changing normal upload state.
+
+        :raises TestUploadNoDataError: If no mapped measurement is currently valid.
+        :raises WeatherUndergroundError: If Weather Underground rejects or cannot process the upload.
+        """
+        observation = build_observation(self.hass, self._entry.options, now=dt_util.utcnow())
+        if not observation:
+            raise TestUploadNoDataError
+
+        async with self._upload_lock:
+            await self._client.async_upload(observation)
 
     @override
     async def _async_update_data(self) -> UploadState:
@@ -86,7 +105,8 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
             )
 
         try:
-            await self._client.async_upload(observation)
+            async with self._upload_lock:
+                await self._client.async_upload(observation)
         except WeatherUndergroundAuthenticationError as err:
             self.data = UploadState(
                 status=UploadStatus.AUTHENTICATION_ERROR,
