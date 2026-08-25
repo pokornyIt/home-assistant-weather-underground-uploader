@@ -126,5 +126,24 @@
     "test_upload_no_data": {
       "message": "The test upload needs at least one mapped measurement with a currently valid value and supported unit. Check the station options and source entity state."
     }
+  },
+  "issues": {
+    "mapping_problem": {
+      "fix_flow": {
+        "step": {
+          "mapping": {
+            "data": {
+              "entity_id": "Replacement source entity"
+            },
+            "data_description": {
+              "entity_id": "Select a valid sensor or numeric helper. Clear the selection to remove this mapping."
+            },
+            "description": "The `{mapping}` source `{entity_id}` for station {station} has been unusable for at least three consecutive upload cycles. Select a replacement entity, or clear the field to remove this mapping.",
+            "title": "Repair station mapping"
+          }
+        }
+      },
+      "title": "Mapped entity {entity_id} needs attention for {station}"
+    }
   }
 }

@@ -137,6 +137,14 @@ after it is detected in three consecutive normal upload cycles. It disappears
 automatically when the mapping produces a valid value again. Test uploads do
 not advance this operational tracking.
 
+A persistent mapping problem also appears in **Settings > System > Repairs**.
+Its repair flow can replace the affected source entity or remove that mapping
+without changing the station's other mappings or options. The issue is
+deduplicated per station mapping and clears automatically after recovery.
+Rejected station credentials continue to use Home Assistant's native
+reauthentication flow. Transient Weather Underground or network failures do not
+create Repairs issues.
+
 ### Rainfall semantics
 
 A wet/dry, raining/not-raining, contact, moisture, or other qualitative binary
