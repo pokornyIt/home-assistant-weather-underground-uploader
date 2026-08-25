@@ -56,7 +56,7 @@ async def test_config_entry_diagnostics_are_useful_and_redacted(hass: HomeAssist
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 
     assert diagnostics == {
-        "integration": {"version": "0.1.2"},
+        "integration": {"version": "0.2.0"},
         "config_entry": {
             CONF_STATION_ID: "IPRAGUE1",
             CONF_STATION_KEY: REDACTED,
