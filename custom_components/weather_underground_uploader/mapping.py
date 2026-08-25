@@ -28,7 +28,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from .const import CONF_DEW_POINT
+from .const import CONF_DEW_POINT, CONF_MAX_SOURCE_AGE, DEFAULT_MAX_SOURCE_AGE_MINUTES
 from .models import (
     MAPPING_SPECS,
     MappingProblemType,
@@ -37,8 +37,6 @@ from .models import (
     MeasurementKind,
     ObservationResult,
 )
-
-DEFAULT_MAX_STATE_AGE: Final = timedelta(hours=1)
 
 _ABSOLUTE_ZERO_FAHRENHEIT: Final = -459.67
 _MAGNUS_A: Final = 17.625
@@ -51,7 +49,7 @@ def build_observation(
     options: Mapping[str, object],
     *,
     now: datetime | None = None,
-    max_state_age: timedelta = DEFAULT_MAX_STATE_AGE,
+    max_state_age: timedelta | None = None,
 ) -> dict[str, str]:
     """Build normalized Weather Underground fields from current entity states.
 
@@ -61,7 +59,7 @@ def build_observation(
     :param hass: Home Assistant instance whose state machine is read now.
     :param options: Config-entry options containing entity mappings.
     :param now: Current UTC time override for deterministic tests.
-    :param max_state_age: Maximum age since an entity last reported.
+    :param max_state_age: Optional maximum age override for tests and callers.
     :return: Normalized Weather Underground protocol fields.
     """
     return build_observation_result(
@@ -77,17 +75,29 @@ def build_observation_result(
     options: Mapping[str, object],
     *,
     now: datetime | None = None,
-    max_state_age: timedelta = DEFAULT_MAX_STATE_AGE,
+    max_state_age: timedelta | None = None,
 ) -> ObservationResult:
     """Build an observation and classify every unusable configured mapping.
 
     :param hass: Home Assistant instance whose state machine is read now.
     :param options: Config-entry options containing entity mappings.
     :param now: Current UTC time override for deterministic tests.
-    :param max_state_age: Maximum age since an entity last reported.
+    :param max_state_age: Optional maximum age override for tests and callers.
     :return: Normalized fields and current non-sensitive mapping problems.
     """
     current_time = now or dt_util.utcnow()
+    if max_state_age is None:
+        configured_minutes = options.get(
+            CONF_MAX_SOURCE_AGE,
+            DEFAULT_MAX_SOURCE_AGE_MINUTES,
+        )
+        max_state_age = timedelta(
+            minutes=(
+                float(configured_minutes)
+                if isinstance(configured_minutes, int | float)
+                else DEFAULT_MAX_SOURCE_AGE_MINUTES
+            )
+        )
     normalized: dict[str, float] = {}
     problems: list[MappingValidationProblem] = []
 

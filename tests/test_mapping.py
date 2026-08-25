@@ -24,6 +24,7 @@ from custom_components.weather_underground_uploader.const import (
     CONF_DEW_POINT,
     CONF_HOURLY_RAIN,
     CONF_HUMIDITY,
+    CONF_MAX_SOURCE_AGE,
     CONF_PRESSURE,
     CONF_SOLAR_RADIATION,
     CONF_TEMPERATURE,
@@ -156,8 +157,8 @@ def test_invalid_values_are_omitted_independently(hass: HomeAssistant) -> None:
     }
 
 
-def test_stale_value_is_omitted(hass: HomeAssistant) -> None:
-    """An entity that has not reported within the freshness window is omitted."""
+def test_default_max_source_age_omits_stale_value(hass: HomeAssistant) -> None:
+    """The default one-hour age omits an older source value."""
     now = dt_util.utcnow()
     hass.states.async_set(
         "sensor.temperature",
@@ -171,6 +172,52 @@ def test_stale_value_is_omitted(hass: HomeAssistant) -> None:
     assert result.observation == {}
     assert len(result.problems) == 1
     assert result.problems[0].problem_type is MappingProblemType.STALE
+
+
+def test_custom_max_source_age_is_applied_per_station(hass: HomeAssistant) -> None:
+    """A station option replaces the default source freshness window."""
+    now = dt_util.utcnow()
+    hass.states.async_set(
+        "sensor.temperature",
+        "20",
+        {UNIT: UnitOfTemperature.CELSIUS},
+        timestamp=(now - timedelta(minutes=20)).timestamp(),
+    )
+
+    result = build_observation_result(
+        hass,
+        {
+            CONF_TEMPERATURE: "sensor.temperature",
+            CONF_MAX_SOURCE_AGE: 15,
+        },
+        now=now,
+    )
+
+    assert result.observation == {}
+    assert result.problems[0].problem_type is MappingProblemType.STALE
+
+
+def test_source_value_at_configured_age_boundary_is_accepted(hass: HomeAssistant) -> None:
+    """A value reported exactly at the configured maximum age remains valid."""
+    now = dt_util.utcnow()
+    hass.states.async_set(
+        "sensor.temperature",
+        "20",
+        {UNIT: UnitOfTemperature.CELSIUS},
+        timestamp=(now - timedelta(minutes=15)).timestamp(),
+    )
+
+    result = build_observation_result(
+        hass,
+        {
+            CONF_TEMPERATURE: "sensor.temperature",
+            CONF_MAX_SOURCE_AGE: 15,
+        },
+        now=now,
+    )
+
+    assert result.observation == {"tempf": "68"}
+    assert result.problems == ()
 
 
 def test_incompatible_dew_point_is_reported(hass: HomeAssistant) -> None:

@@ -19,7 +19,12 @@ CONF_DAILY_RAIN: Final = "daily_rain_entity"
 CONF_UV_INDEX: Final = "uv_index_entity"
 CONF_SOLAR_RADIATION: Final = "solar_radiation_entity"
 CONF_UPLOAD_INTERVAL: Final = "upload_interval"
+CONF_MAX_SOURCE_AGE: Final = "max_source_age"
 
 DEFAULT_UPLOAD_INTERVAL_SECONDS: Final = 300
 MIN_UPLOAD_INTERVAL_SECONDS: Final = 60
 MAX_UPLOAD_INTERVAL_SECONDS: Final = 3600
+
+DEFAULT_MAX_SOURCE_AGE_MINUTES: Final = 60
+MIN_SOURCE_AGE_MINUTES: Final = 1
+MAX_SOURCE_AGE_MINUTES: Final = 1440

@@ -87,7 +87,10 @@ existing configuration unchanged.
 All measurement mappings are optional, but an active station requires at least
 one mapping and an upload requires at least one currently valid mapped value.
 The default upload interval is 300 seconds and can be set from 60 to 3,600
-seconds.
+seconds. The maximum accepted source age defaults to 60 minutes and can be set
+from 1 to 1,440 minutes independently for each station. Saving either option
+reloads that config entry, so the new value takes effect without restarting
+Home Assistant.
 
 ## Virtual stations and multiple stations
 
@@ -144,9 +147,10 @@ physical range are still validated at upload time, so selecting an entity does
 not make incompatible data valid.
 
 Missing entities, `unknown` or `unavailable` states, non-numeric and non-finite
-values, unsupported units, physically invalid values, and values that have not
-reported for more than one hour are omitted individually. Other valid mapped
-values remain eligible for upload.
+values, unsupported units, physically invalid values, and values older than the
+station's configured maximum source age are omitted individually. A value
+reported exactly at the age limit is still accepted. Other valid mapped values
+remain eligible for upload.
 
 Each omitted configured mapping is classified independently. The upload status
 sensor exposes current problems in its `mapping_problems` attribute, keyed by

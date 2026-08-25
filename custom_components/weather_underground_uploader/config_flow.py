@@ -24,12 +24,16 @@ from homeassistant.helpers.selector import (
 
 from .api import WeatherUndergroundAuthenticationError, WeatherUndergroundClient, WeatherUndergroundError
 from .const import (
+    CONF_MAX_SOURCE_AGE,
     CONF_STATION_ID,
     CONF_STATION_KEY,
     CONF_UPLOAD_INTERVAL,
+    DEFAULT_MAX_SOURCE_AGE_MINUTES,
     DEFAULT_UPLOAD_INTERVAL_SECONDS,
     DOMAIN,
+    MAX_SOURCE_AGE_MINUTES,
     MAX_UPLOAD_INTERVAL_SECONDS,
+    MIN_SOURCE_AGE_MINUTES,
     MIN_UPLOAD_INTERVAL_SECONDS,
 )
 from .mapping import build_observation
@@ -47,6 +51,15 @@ _UPLOAD_INTERVAL_SELECTOR: Selector[NumberSelectorConfig] = NumberSelector(  # p
         step=10,
         mode=NumberSelectorMode.BOX,
         unit_of_measurement="s",
+    )
+)
+_MAX_SOURCE_AGE_SELECTOR: Selector[NumberSelectorConfig] = NumberSelector(  # pyright: ignore[reportUnknownVariableType]
+    NumberSelectorConfig(
+        min=MIN_SOURCE_AGE_MINUTES,
+        max=MAX_SOURCE_AGE_MINUTES,
+        step=1,
+        mode=NumberSelectorMode.BOX,
+        unit_of_measurement="min",
     )
 )
 
@@ -196,6 +209,13 @@ class WeatherUndergroundUploaderOptionsFlow(OptionsFlowWithReload):
                             DEFAULT_UPLOAD_INTERVAL_SECONDS,
                         ),
                     ): _UPLOAD_INTERVAL_SELECTOR,
+                    vol.Required(
+                        CONF_MAX_SOURCE_AGE,
+                        default=self.config_entry.options.get(
+                            CONF_MAX_SOURCE_AGE,
+                            DEFAULT_MAX_SOURCE_AGE_MINUTES,
+                        ),
+                    ): _MAX_SOURCE_AGE_SELECTOR,
                     **{
                         vol.Optional(
                             spec.option_key,
