@@ -127,8 +127,12 @@ async def test_unmapped_station_remains_idle_and_unscheduled(hass: HomeAssistant
     assert coordinator.data.status is UploadStatus.IDLE
     assert coordinator.data.last_attempt is None
     assert coordinator.data.consecutive_failures == 0
-    button_state = hass.states.get("button.weather_underground_iprague1_test_upload")
-    assert button_state is not None and button_state.state == STATE_UNAVAILABLE
+    for entity_id in (
+        "button.weather_underground_iprague1_upload_now",
+        "button.weather_underground_iprague1_test_upload",
+    ):
+        button_state = hass.states.get(entity_id)
+        assert button_state is not None and button_state.state == STATE_UNAVAILABLE
     await _unload_entry(hass, entry)
 
 
@@ -306,7 +310,27 @@ async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant
     await _unload_entry(hass, entry)
 
 
-async def test_upload_button_sends_test_observation(hass: HomeAssistant) -> None:
+async def test_upload_now_button_requests_normal_cycle(hass: HomeAssistant) -> None:
+    """The original manual control still updates normal operational state."""
+    entry = _create_entry(hass)
+    upload = AsyncMock(side_effect=[None, WeatherUndergroundConnectionError("temporary failure")])
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, entry)
+        assert entry.runtime_data.coordinator.data.status is UploadStatus.SUCCESS
+        await hass.services.async_call(
+            "button",
+            "press",
+            {"entity_id": "button.weather_underground_iprague1_upload_now"},
+            blocking=True,
+        )
+
+    assert upload.await_count == 2
+    assert entry.runtime_data.coordinator.data.status is UploadStatus.ERROR
+    assert entry.runtime_data.coordinator.data.consecutive_failures == 1
+    await _unload_entry(hass, entry)
+
+
+async def test_test_upload_button_sends_observation(hass: HomeAssistant) -> None:
     """A successful test uploads current data without changing operational state."""
     entry = _create_entry(hass)
     upload = AsyncMock()

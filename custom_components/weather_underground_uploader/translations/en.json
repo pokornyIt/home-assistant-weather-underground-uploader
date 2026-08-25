@@ -71,8 +71,11 @@
   },
   "entity": {
     "button": {
-      "upload_now": {
+      "test_upload": {
         "name": "Test upload"
+      },
+      "upload_now": {
+        "name": "Upload now"
       }
     },
     "sensor": {

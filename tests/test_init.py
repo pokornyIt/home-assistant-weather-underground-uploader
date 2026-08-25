@@ -36,6 +36,7 @@ class TestConfigEntryLifecycle:
         assert isinstance(entry.runtime_data.client, WeatherUndergroundClient)
         assert isinstance(entry.runtime_data.coordinator, WeatherUndergroundUploadCoordinator)
         assert hass.states.get("sensor.weather_underground_iprague1_upload_status") is not None
+        assert hass.states.get("button.weather_underground_iprague1_upload_now") is not None
         assert hass.states.get("button.weather_underground_iprague1_test_upload") is not None
 
         assert await hass.config_entries.async_reload(entry.entry_id)

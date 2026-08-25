@@ -71,8 +71,11 @@
   },
   "entity": {
     "button": {
-      "upload_now": {
+      "test_upload": {
         "name": "Testovací odeslání"
+      },
+      "upload_now": {
+        "name": "Odeslat nyní"
       }
     },
     "sensor": {
