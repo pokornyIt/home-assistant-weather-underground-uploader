@@ -5,6 +5,27 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-25
+
+### Added
+
+- Added a separate test-upload control that validates current mapped data and
+  credentials without changing normal upload status or counters.
+- Added native Station ID and Station Key reconfiguration while preserving
+  entity mappings and operational options.
+- Added classified mapped-entity problem tracking and actionable Home Assistant
+  Repairs issues for persistent failures.
+- Added a configurable per-station maximum source age with a backward-compatible
+  60-minute default.
+
+### Changed
+
+- Grouped each station's controls and operational sensors under one stable Home
+  Assistant device, including migration of released registry identities.
+- Allowed both sensor entities and numeric helpers in mapping and repair
+  selectors without vendor or device-class restrictions.
+- Improved license badge rendering across GitHub and HACS.
+
 ## [0.1.2] - 2026-08-23
 
 ### Changed
@@ -41,7 +62,8 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 - English and Czech translations.
 - Automated tests, CI, hassfest, HACS validation, and release automation.
 
-[Unreleased]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/pokornyIt/home-assistant-weather-underground-uploader/releases/tag/v0.1.0

@@ -1,6 +1,6 @@
 [project]
 name = "home-assistant-weather-underground-uploader"
-version = "0.1.2"
+version = "0.2.0"
 description = "Upload virtual Home Assistant weather stations to Weather Underground."
 readme = "README.md"
 authors = [{ name = "pokornyIt" }]
