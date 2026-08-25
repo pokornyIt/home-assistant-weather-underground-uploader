@@ -3,10 +3,14 @@
   "config": {
     "abort": {
       "already_configured": "This Weather Underground station is already configured.",
-      "reauth_successful": "The Station Key was updated successfully."
+      "reauth_successful": "The Station Key was updated successfully.",
+      "reconfigure_successful": "The station credentials were updated successfully."
     },
     "error": {
-      "invalid_station_id": "Enter a Station ID containing at least one non-whitespace character."
+      "cannot_connect": "The new credentials could not be validated because Weather Underground is unavailable or returned an unexpected response. Try again later.",
+      "invalid_auth": "Weather Underground rejected the new Station ID or Station Key. The existing credentials were not changed.",
+      "invalid_station_id": "Enter a Station ID containing at least one non-whitespace character.",
+      "invalid_station_key": "Enter a Station Key containing at least one non-whitespace character."
     },
     "step": {
       "user": {
@@ -30,6 +34,18 @@
         },
         "description": "Weather Underground rejected the credentials for this station. Enter a new Station Key.",
         "title": "Reauthenticate station"
+      },
+      "reconfigure": {
+        "data": {
+          "station_id": "Station ID",
+          "station_key": "Station Key"
+        },
+        "data_description": {
+          "station_id": "The replacement Weather Underground Personal Weather Station ID.",
+          "station_key": "The replacement upload key for this station. It is stored as a secret and is never prefilled."
+        },
+        "description": "Change this station's credentials without losing its entity mappings or options. When at least one mapped measurement is currently valid, Home Assistant sends one upload with the new credentials to validate them before saving.",
+        "title": "Reconfigure station"
       }
     }
   },

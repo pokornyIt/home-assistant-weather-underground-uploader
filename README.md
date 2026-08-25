@@ -77,6 +77,13 @@ The Station ID is normalized to uppercase and is the stable identifier for the
 config entry. The same Station ID cannot be configured twice. The Station Key
 is stored as a secret and is never included in logs or downloaded diagnostics.
 
+Use **Reconfigure** on an existing integration entry to rotate its Station Key
+or change its Station ID without losing entity mappings and options. A changed
+Station ID must not already belong to another entry. When a currently valid
+mapped measurement is available, reconfiguration validates the new credentials
+with one upload before saving; a rejected or failed validation leaves the
+existing configuration unchanged.
+
 All measurement mappings are optional, but an active station requires at least
 one mapping and an upload requires at least one currently valid mapped value.
 The default upload interval is 300 seconds and can be set from 60 to 3,600
