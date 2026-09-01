@@ -1,0 +1,4 @@
+interface:
+  display_name: HACS Check
+  short_description: Audit current HACS publication status
+  default_prompt: Run HACS check for this repository.

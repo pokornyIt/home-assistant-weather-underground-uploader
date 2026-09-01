@@ -117,3 +117,9 @@ introduced. Do not report a check as passing if it could not be run.
 - Do not mark work complete before relevant validation passes.
 - Report implemented behavior, architectural decisions, validation results,
   and intentionally deferred roadmap work.
+
+## Project-local Codex skills
+
+- Project-local skills live under `.agents/skills/<skill-name>/`.
+- Use `HACS check` to invoke `.agents/skills/hacs-check/SKILL.md` and audit
+  the current HACS publication and branding status.
