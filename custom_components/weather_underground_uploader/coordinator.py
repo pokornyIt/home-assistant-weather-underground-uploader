@@ -64,7 +64,11 @@ class MappingProblemState:
 def mapping_problem_details(
     problems: Mapping[str, MappingProblemState],
 ) -> dict[str, dict[str, str | int | bool]]:
-    """Serialize current mapping problems without station credentials."""
+    """Serialize current mapping problems without station credentials.
+
+    :param problems: Current mapping problem states keyed by mapping option.
+    :return: Safe serializable mapping problem details.
+    """
     return {
         mapping_key: {
             "entity_id": problem.entity_id,
@@ -122,7 +126,6 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
         """Send a test observation without changing normal upload state.
 
         :raises TestUploadNoDataError: If no mapped measurement is currently valid.
-        :raises WeatherUndergroundError: If Weather Underground rejects or cannot process the upload.
         """
         observation = build_observation(self.hass, self._entry.options, now=dt_util.utcnow())
         if not observation:
@@ -133,7 +136,11 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
 
     @override
     async def _async_update_data(self) -> UploadState:
-        """Build and upload one fresh observation."""
+        """Build and upload one fresh observation.
+
+        :return: The resulting operational upload state.
+        :raises ConfigEntryAuthFailed: If station credentials are rejected.
+        """
         if not self.upload_enabled:
             return self.data
 
@@ -189,7 +196,11 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
         current_problems: tuple[MappingValidationProblem, ...],
         detected_at: datetime,
     ) -> None:
-        """Advance consecutive problem state and drop recovered mappings."""
+        """Advance consecutive problem state and drop recovered mappings.
+
+        :param current_problems: Problems detected during the current cycle.
+        :param detected_at: UTC timestamp of the current detection.
+        """
         updated: dict[str, MappingProblemState] = {}
         for current in current_problems:
             previous = self._mapping_problems.get(current.mapping_key)

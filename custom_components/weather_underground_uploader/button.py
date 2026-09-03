@@ -20,7 +20,10 @@ class WeatherUndergroundUploadNowButton(ButtonEntity):
     _attr_icon = "mdi:cloud-upload-outline"
 
     def __init__(self, entry: WeatherUndergroundUploaderConfigEntry) -> None:
-        """Initialize the normal upload button."""
+        """Initialize the normal upload button.
+
+        :param entry: Station config entry that owns the button.
+        """
         self._attr_unique_id = station_entity_unique_id(entry, "upload_now")
         self._attr_device_info = station_device_info(entry)
         self._coordinator = entry.runtime_data.coordinator
@@ -39,7 +42,10 @@ class WeatherUndergroundTestUploadButton(ButtonEntity):
     _attr_icon = "mdi:cloud-check-outline"
 
     def __init__(self, entry: WeatherUndergroundUploaderConfigEntry) -> None:
-        """Initialize the test upload button."""
+        """Initialize the test upload button.
+
+        :param entry: Station config entry that owns the button.
+        """
         self._attr_unique_id = station_entity_unique_id(entry, "test_upload")
         self._attr_device_info = station_device_info(entry)
         self._entry = entry
@@ -47,7 +53,11 @@ class WeatherUndergroundTestUploadButton(ButtonEntity):
         self._attr_available = self._coordinator.upload_enabled
 
     async def async_press(self) -> None:
-        """Send a test upload and report an actionable translated failure."""
+        """Send a test upload and report an actionable translated failure.
+
+        :raises ServiceValidationError: If no valid observation is available.
+        :raises HomeAssistantError: If credentials or the service rejects the upload.
+        """
         try:
             await self._coordinator.async_test_upload()
         except TestUploadNoDataError as err:
@@ -73,7 +83,12 @@ async def async_setup_entry(
     entry: WeatherUndergroundUploaderConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up upload controls for one station."""
+    """Set up upload controls for one station.
+
+    :param hass: Home Assistant instance.
+    :param entry: Station config entry.
+    :param async_add_entities: Entity callback.
+    """
     del hass
     async_add_entities(
         [

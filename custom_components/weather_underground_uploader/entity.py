@@ -10,7 +10,11 @@ from .runtime import WeatherUndergroundUploaderConfigEntry
 
 
 def station_device_info(entry: WeatherUndergroundUploaderConfigEntry) -> DeviceInfo:
-    """Return device information for one virtual station."""
+    """Return device information for one virtual station.
+
+    :param entry: Station config entry.
+    :return: Home Assistant device information.
+    """
     station_id = entry.data[CONF_STATION_ID]
     return DeviceInfo(
         identifiers={(DOMAIN, entry.entry_id)},
@@ -21,13 +25,22 @@ def station_device_info(entry: WeatherUndergroundUploaderConfigEntry) -> DeviceI
 
 
 def station_entity_unique_id(entry: WeatherUndergroundUploaderConfigEntry, entity_key: str) -> str:
-    """Return a stable entity unique ID based on the station identity."""
+    """Return a stable entity unique ID based on the station identity.
+
+    :param entry: Station config entry.
+    :param entity_key: Stable key for the entity type.
+    :return: Entity registry unique ID.
+    """
     return f"{entry.entry_id}_{entity_key}"
 
 
 @callback
 def async_migrate_station_registry(hass: HomeAssistant, entry: WeatherUndergroundUploaderConfigEntry) -> None:
-    """Migrate released Station ID registry keys to stable config-entry keys."""
+    """Migrate released Station ID registry keys to stable config-entry keys.
+
+    :param hass: Home Assistant instance.
+    :param entry: Station config entry whose registries are migrated.
+    """
     station_id = entry.data[CONF_STATION_ID]
     old_identifier = (DOMAIN, station_id)
     new_identifier = (DOMAIN, entry.entry_id)

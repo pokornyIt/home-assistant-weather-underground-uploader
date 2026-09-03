@@ -41,6 +41,9 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
+      - name: Check documentation
+        run: uv run pydoclint --config=pyproject.toml custom_components
+
       - name: Type check
         run: uv run pyright
 

@@ -149,7 +149,14 @@ def _normalize_state(
     now: datetime,
     max_state_age: timedelta,
 ) -> tuple[float | None, MappingProblemType | None]:
-    """Return a normalized value or the exact reason it is unusable."""
+    """Return a normalized value or the exact reason it is unusable.
+
+    :param state: Source entity state, if it exists.
+    :param spec: Mapping definition used for normalization.
+    :param now: Current UTC time used for staleness checks.
+    :param max_state_age: Maximum accepted age of the source state.
+    :return: Normalized value and its unavailable reason, if any.
+    """
     if state is None:
         return None, MappingProblemType.MISSING_ENTITY
 
@@ -186,7 +193,14 @@ def _normalize_state(
 
 
 def _convert_value(value: float, unit: str | None, kind: MeasurementKind) -> float:
-    """Convert a value to its Weather Underground protocol unit."""
+    """Convert a value to its Weather Underground protocol unit.
+
+    :param value: Source numeric value.
+    :param unit: Home Assistant source unit.
+    :param kind: Measurement conversion category.
+    :return: Converted protocol value.
+    :raises HomeAssistantError: If the source unit is unsupported.
+    """
     if kind is MeasurementKind.TEMPERATURE:
         return TemperatureConverter.convert(value, unit, UnitOfTemperature.FAHRENHEIT)
     if kind is MeasurementKind.PRESSURE:
@@ -215,7 +229,12 @@ def _convert_value(value: float, unit: str | None, kind: MeasurementKind) -> flo
 
 
 def _is_in_physical_range(value: float, kind: MeasurementKind) -> bool:
-    """Check broad physical limits without imposing device-specific ranges."""
+    """Check broad physical limits without imposing device-specific ranges.
+
+    :param value: Normalized measurement value.
+    :param kind: Measurement category.
+    :return: Whether the value is physically meaningful.
+    """
     if kind is MeasurementKind.TEMPERATURE:
         return value >= _ABSOLUTE_ZERO_FAHRENHEIT
     if kind is MeasurementKind.HUMIDITY:
@@ -228,7 +247,12 @@ def _is_in_physical_range(value: float, kind: MeasurementKind) -> bool:
 
 
 def _calculate_dew_point_fahrenheit(temperature_f: float, humidity: float) -> float | None:
-    """Calculate dew point with the Magnus formula."""
+    """Calculate dew point with the Magnus formula.
+
+    :param temperature_f: Outdoor temperature in Fahrenheit.
+    :param humidity: Relative humidity percentage.
+    :return: Dew point in Fahrenheit, or none when humidity is unusable.
+    """
     if humidity <= 0:
         return None
     temperature_c = TemperatureConverter.convert(
@@ -246,6 +270,10 @@ def _calculate_dew_point_fahrenheit(temperature_f: float, humidity: float) -> fl
 
 
 def _format_value(value: float) -> str:
-    """Format a protocol number without locale or insignificant zeroes."""
+    """Format a protocol number without locale or insignificant zeroes.
+
+    :param value: Numeric protocol value.
+    :return: Compact decimal representation.
+    """
     formatted = f"{value:.6f}".rstrip("0").rstrip(".")
     return "0" if formatted == "-0" else formatted

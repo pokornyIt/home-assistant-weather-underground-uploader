@@ -14,6 +14,7 @@ package = false
 
 [dependency-groups]
 dev = [
+  "pydoclint==0.9.1",
   "pre-commit>=4.6,<5",
   "pyright>=1.1.404,<2",
   "pytest>=9,<10",
@@ -59,8 +60,18 @@ docstring-code-format = true
 line-ending = "lf"
 
 [tool.ruff.lint]
-ignore = ["D100", "D104"]
 select = ["ANN", "B", "D", "E4", "E7", "E9", "F", "I", "N", "RUF", "SIM", "UP"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
+
+[tool.pydoclint]
+style = "sphinx"
+arg-type-hints-in-docstring = false
+check-return-types = false
+check-yield-types = false
+skip-checking-short-docstrings = false
+native-mode-noqa-location = "definition"
+allow-init-docstring = true
+check-class-attributes = false
+skip-checking-private-functions = false

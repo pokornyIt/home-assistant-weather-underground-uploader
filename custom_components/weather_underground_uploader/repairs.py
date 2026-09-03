@@ -38,7 +38,12 @@ class _MappingProblem(Protocol):
 
 
 def mapping_issue_id(entry_id: str, mapping_key: str) -> str:
-    """Return the stable issue ID for one station mapping."""
+    """Return the stable issue ID for one station mapping.
+
+    :param entry_id: Home Assistant config-entry ID.
+    :param mapping_key: Mapping option key.
+    :return: Stable Repairs issue ID.
+    """
     return f"{_MAPPING_ISSUE_PREFIX}_{entry_id}_{mapping_key}"
 
 
@@ -48,7 +53,12 @@ def async_sync_mapping_issues(
     entry: ConfigEntry[Any],
     problems: Mapping[str, _MappingProblem],
 ) -> None:
-    """Create persistent mapping issues and remove recovered ones."""
+    """Create persistent mapping issues and remove recovered ones.
+
+    :param hass: Home Assistant instance.
+    :param entry: Station config entry.
+    :param problems: Current mapping problems keyed by mapping option.
+    """
     registry = ir.async_get(hass)
     for mapping_key in _MAPPING_KEYS:
         issue_id = mapping_issue_id(entry.entry_id, mapping_key)
@@ -91,18 +101,31 @@ class MappingRepairFlow(RepairsFlow):
     """Replace or remove one persistently unusable mapping."""
 
     def __init__(self, entry: ConfigEntry[Any], mapping_key: str, entity_id: str) -> None:
-        """Initialize a mapping repair flow."""
+        """Initialize a mapping repair flow.
+
+        :param entry: Station config entry being repaired.
+        :param mapping_key: Mapping option key being repaired.
+        :param entity_id: Currently configured entity ID.
+        """
         super().__init__()
         self._entry = entry
         self._mapping_key = mapping_key
         self._entity_id = entity_id
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> RepairsFlowResult:
-        """Start the mapping repair flow."""
+        """Start the mapping repair flow.
+
+        :param user_input: Ignored initial flow input.
+        :return: Mapping repair step result.
+        """
         return await self.async_step_mapping()
 
     async def async_step_mapping(self, user_input: dict[str, Any] | None = None) -> RepairsFlowResult:
-        """Replace the affected source entity or remove its mapping."""
+        """Replace the affected source entity or remove its mapping.
+
+        :param user_input: Replacement entity submitted by the user.
+        :return: Updated flow result or the repair form.
+        """
         if user_input is not None:
             options = dict(self._entry.options)
             replacement = user_input.get(CONF_ENTITY_ID)
@@ -138,7 +161,13 @@ async def async_create_fix_flow(
     issue_id: str,
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
-    """Create a fix flow for a persistent mapping issue."""
+    """Create a fix flow for a persistent mapping issue.
+
+    :param hass: Home Assistant instance.
+    :param issue_id: Repairs issue ID.
+    :param data: Issue data, if available.
+    :return: Appropriate Repairs flow.
+    """
     if (
         issue_id.startswith(f"{_MAPPING_ISSUE_PREFIX}_")
         and data is not None
