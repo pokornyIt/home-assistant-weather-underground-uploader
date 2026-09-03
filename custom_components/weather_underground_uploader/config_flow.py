@@ -111,12 +111,20 @@ class WeatherUndergroundUploaderConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
-        """Start reauthentication for rejected station credentials."""
+        """Start reauthentication for rejected station credentials.
+
+        :param entry_data: Existing entry data supplied by Home Assistant.
+        :return: Reauthentication confirmation flow result.
+        """
         del entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Collect and save a replacement Station Key."""
+        """Collect and save a replacement Station Key.
+
+        :param user_input: Replacement credential submitted by the user.
+        :return: Updated flow result or the credential form.
+        """
         if user_input is not None:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
@@ -129,7 +137,11 @@ class WeatherUndergroundUploaderConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Change station credentials while preserving the config entry."""
+        """Change station credentials while preserving the config entry.
+
+        :param user_input: Replacement station details submitted by the user.
+        :return: Updated flow result or the credential form.
+        """
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
 

@@ -88,5 +88,9 @@ MAPPING_SPECS: Final = (
 
 
 def has_configured_mapping(options: Mapping[str, object]) -> bool:
-    """Return whether station options contain at least one entity mapping."""
+    """Return whether station options contain at least one entity mapping.
+
+    :param options: Station options to inspect.
+    :return: Whether at least one supported mapping is configured.
+    """
     return any(bool(options.get(spec.option_key)) for spec in MAPPING_SPECS)

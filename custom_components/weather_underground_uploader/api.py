@@ -84,10 +84,7 @@ class WeatherUndergroundClient:
 
         :param observation: Non-empty normalized Weather Underground fields.
         :raises ValueError: If the observation is empty or overrides protocol metadata.
-        :raises WeatherUndergroundAuthenticationError: If credentials are rejected.
-        :raises WeatherUndergroundRateLimitError: If the service rate-limits the request.
-        :raises WeatherUndergroundConnectionError: If transport or service availability fails.
-        :raises WeatherUndergroundResponseError: If the response is malformed or unexpected.
+        :raises WeatherUndergroundConnectionError: If transport fails.
         """
         if not observation:
             raise ValueError("Weather Underground observation must not be empty")

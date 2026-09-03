@@ -30,7 +30,12 @@ class WeatherUndergroundOperationalSensor(SensorEntity):
         description: SensorEntityDescription,
         value_fn: Callable[[UploadState], datetime | int | str | None],
     ) -> None:
-        """Initialize an operational sensor."""
+        """Initialize an operational sensor.
+
+        :param entry: Station config entry that owns the sensor.
+        :param description: Home Assistant entity description.
+        :param value_fn: Function selecting the sensor value from coordinator state.
+        """
         self.entity_description = description
         self._attr_unique_id = station_entity_unique_id(entry, description.key)
         self._attr_device_info = station_device_info(entry)
@@ -54,7 +59,10 @@ class WeatherUndergroundStatusSensor(WeatherUndergroundOperationalSensor):
     """Expose the latest upload result."""
 
     def __init__(self, entry: WeatherUndergroundUploaderConfigEntry) -> None:
-        """Initialize the upload status sensor."""
+        """Initialize the upload status sensor.
+
+        :param entry: Station config entry that owns the sensor.
+        """
         self._attr_options = [status.value for status in UploadStatus]
         super().__init__(
             entry,
@@ -84,7 +92,12 @@ async def async_setup_entry(
     entry: WeatherUndergroundUploaderConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up operational sensors for one station."""
+    """Set up operational sensors for one station.
+
+    :param hass: Home Assistant instance.
+    :param entry: Station config entry.
+    :param async_add_entities: Entity callback.
+    """
     del hass
     async_add_entities(
         [

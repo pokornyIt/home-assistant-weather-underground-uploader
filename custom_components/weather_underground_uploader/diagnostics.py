@@ -25,7 +25,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: WeatherUndergroundUploaderConfigEntry,
 ) -> dict[str, Any]:
-    """Return secret-safe diagnostics for one virtual station."""
+    """Return secret-safe diagnostics for one virtual station.
+
+    :param hass: Home Assistant instance.
+    :param entry: Station config entry to inspect.
+    :return: Redacted diagnostic data.
+    """
     integration = await async_get_integration(hass, DOMAIN)
     upload_state = entry.runtime_data.coordinator.data
 
