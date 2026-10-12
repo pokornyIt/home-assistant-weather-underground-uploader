@@ -50,6 +50,9 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_upload_interval": "Choose a whole number from 5 to 1,440 in 5-minute steps."
+    },
     "step": {
       "init": {
         "data": {
@@ -83,9 +86,6 @@
           "wind_speed_entity": "Entity providing sustained wind speed."
         },
         "description": "Choose an upload interval in minutes and maximum source age, then map any available sensor or numeric helper to the virtual station. Saving the first mapping starts uploads immediately.",
-        "error": {
-          "invalid_upload_interval": "Choose a whole number from 5 to 1,440 in 5-minute steps."
-        },
         "title": "Station options"
       }
     }

@@ -61,7 +61,7 @@ def test_upload_interval_text_consistently_uses_minutes() -> None:
         translations = _leaf_values(_load_translation(language))
         label = translations[("options", "step", "init", "data", "upload_interval")]
         description = translations[("options", "step", "init", "data_description", "upload_interval")]
-        error = translations[("options", "step", "init", "error", "invalid_upload_interval")]
+        error = translations[("options", "error", "invalid_upload_interval")]
         assert "minut" in label.lower()
         assert "minut" in description.lower()
         assert "5" in error and "1" in error
