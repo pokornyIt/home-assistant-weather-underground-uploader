@@ -381,6 +381,44 @@ async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant
     await _unload_entry(hass, entry)
 
 
+async def test_interval_option_reloads_only_the_active_station(hass: HomeAssistant) -> None:
+    """Saving an interval replaces one active station's scheduler without affecting another."""
+    first = _create_entry(hass, station_id="IPRAGUE1", interval=30)
+    second = _create_entry(hass, station_id="IBRNO2", interval=10)
+    upload = AsyncMock()
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, first)
+        await _setup_entry(hass, second)
+        previous_coordinator = first.runtime_data.coordinator
+        second_coordinator = second.runtime_data.coordinator
+        second_timer = second_coordinator._unsub_refresh
+
+        assert previous_coordinator.update_interval == timedelta(minutes=30)
+        assert previous_coordinator._unsub_refresh is not None
+        assert second_coordinator.update_interval == timedelta(minutes=10)
+        assert second_timer is not None
+
+        result = await hass.config_entries.options.async_init(first.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_TEMPERATURE: first.options[CONF_TEMPERATURE],
+                CONF_UPLOAD_INTERVAL: 10,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert first.runtime_data.coordinator is not previous_coordinator
+    assert first.runtime_data.coordinator.update_interval == timedelta(minutes=10)
+    assert previous_coordinator._unsub_refresh is None
+    assert second.runtime_data.coordinator is second_coordinator
+    assert second_coordinator.update_interval == timedelta(minutes=10)
+    assert second_coordinator._unsub_refresh is second_timer
+    await _unload_entry(hass, first)
+    await _unload_entry(hass, second)
+
+
 async def test_source_age_option_takes_effect_after_options_reload(hass: HomeAssistant) -> None:
     """Saving a shorter source age reloads the station and omits old data."""
     entry = _create_entry(hass)
