@@ -29,12 +29,13 @@ from .const import (
     CONF_STATION_KEY,
     CONF_UPLOAD_INTERVAL,
     DEFAULT_MAX_SOURCE_AGE_MINUTES,
-    DEFAULT_UPLOAD_INTERVAL_SECONDS,
+    DEFAULT_UPLOAD_INTERVAL_MINUTES,
     DOMAIN,
     MAX_SOURCE_AGE_MINUTES,
-    MAX_UPLOAD_INTERVAL_SECONDS,
+    MAX_UPLOAD_INTERVAL_MINUTES,
     MIN_SOURCE_AGE_MINUTES,
-    MIN_UPLOAD_INTERVAL_SECONDS,
+    MIN_UPLOAD_INTERVAL_MINUTES,
+    UPLOAD_INTERVAL_STEP_MINUTES,
 )
 from .mapping import build_observation
 from .models import MAPPING_SPECS
@@ -46,11 +47,11 @@ _STATION_KEY_SELECTOR: Selector[TextSelectorConfig] = TextSelector(  # pyright: 
 )
 _UPLOAD_INTERVAL_SELECTOR: Selector[NumberSelectorConfig] = NumberSelector(  # pyright: ignore[reportUnknownVariableType]
     NumberSelectorConfig(
-        min=MIN_UPLOAD_INTERVAL_SECONDS,
-        max=MAX_UPLOAD_INTERVAL_SECONDS,
-        step=10,
+        min=MIN_UPLOAD_INTERVAL_MINUTES,
+        max=MAX_UPLOAD_INTERVAL_MINUTES,
+        step=UPLOAD_INTERVAL_STEP_MINUTES,
         mode=NumberSelectorMode.BOX,
-        unit_of_measurement="s",
+        unit_of_measurement="min",
     )
 )
 _MAX_SOURCE_AGE_SELECTOR: Selector[NumberSelectorConfig] = NumberSelector(  # pyright: ignore[reportUnknownVariableType]
@@ -67,7 +68,7 @@ _MAX_SOURCE_AGE_SELECTOR: Selector[NumberSelectorConfig] = NumberSelector(  # py
 class WeatherUndergroundUploaderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Weather Underground Uploader."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -207,8 +208,20 @@ class WeatherUndergroundUploaderOptionsFlow(OptionsFlowWithReload):
         :param user_input: Values submitted by the user, if any.
         :return: Current options-flow result.
         """
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            interval = user_input[CONF_UPLOAD_INTERVAL]
+            if (
+                isinstance(interval, bool)
+                or not isinstance(interval, int | float)
+                or not float(interval).is_integer()
+                or not MIN_UPLOAD_INTERVAL_MINUTES <= interval <= MAX_UPLOAD_INTERVAL_MINUTES
+                or interval % UPLOAD_INTERVAL_STEP_MINUTES != 0
+            ):
+                errors[CONF_UPLOAD_INTERVAL] = "invalid_upload_interval"
+            else:
+                user_input[CONF_UPLOAD_INTERVAL] = int(interval)
+                return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -218,7 +231,7 @@ class WeatherUndergroundUploaderOptionsFlow(OptionsFlowWithReload):
                         CONF_UPLOAD_INTERVAL,
                         default=self.config_entry.options.get(
                             CONF_UPLOAD_INTERVAL,
-                            DEFAULT_UPLOAD_INTERVAL_SECONDS,
+                            DEFAULT_UPLOAD_INTERVAL_MINUTES,
                         ),
                     ): _UPLOAD_INTERVAL_SELECTOR,
                     vol.Required(
@@ -237,4 +250,5 @@ class WeatherUndergroundUploaderOptionsFlow(OptionsFlowWithReload):
                     },
                 }
             ),
+            errors=errors,
         )

@@ -35,10 +35,11 @@ async def test_config_entry_diagnostics_are_useful_and_redacted(hass: HomeAssist
         },
         options={
             CONF_MAX_SOURCE_AGE: 45,
-            CONF_UPLOAD_INTERVAL: 120,
+            CONF_UPLOAD_INTERVAL: 30,
             CONF_TEMPERATURE: "sensor.outdoor_temperature",
             CONF_HUMIDITY: "input_number.outdoor_humidity",
         },
+        version=2,
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -63,7 +64,7 @@ async def test_config_entry_diagnostics_are_useful_and_redacted(hass: HomeAssist
         },
         "configuration": {
             "max_source_age_minutes": 45,
-            "upload_interval": 120,
+            "upload_interval_minutes": 30,
             "mappings": {
                 CONF_TEMPERATURE: "sensor.outdoor_temperature",
                 CONF_HUMIDITY: "input_number.outdoor_humidity",

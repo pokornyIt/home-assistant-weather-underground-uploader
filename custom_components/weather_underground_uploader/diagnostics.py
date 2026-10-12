@@ -11,7 +11,7 @@ from .const import (
     CONF_STATION_KEY,
     CONF_UPLOAD_INTERVAL,
     DEFAULT_MAX_SOURCE_AGE_MINUTES,
-    DEFAULT_UPLOAD_INTERVAL_SECONDS,
+    DEFAULT_UPLOAD_INTERVAL_MINUTES,
     DOMAIN,
 )
 from .coordinator import mapping_problem_details
@@ -46,10 +46,10 @@ async def async_get_config_entry_diagnostics(
                     DEFAULT_MAX_SOURCE_AGE_MINUTES,
                 )
             ),
-            "upload_interval": int(
+            "upload_interval_minutes": int(
                 entry.options.get(
                     CONF_UPLOAD_INTERVAL,
-                    DEFAULT_UPLOAD_INTERVAL_SECONDS,
+                    DEFAULT_UPLOAD_INTERVAL_MINUTES,
                 )
             ),
             "mappings": {

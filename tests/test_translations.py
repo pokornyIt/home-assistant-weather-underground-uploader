@@ -53,3 +53,15 @@ def test_mapping_guidance_is_separate_and_emphasized() -> None:
         translations = _leaf_values(_load_translation(language))
         description = translations[("config", "step", "user", "description")]
         assert f"\n\n**{label}:**" in description
+
+
+def test_upload_interval_text_consistently_uses_minutes() -> None:
+    """Both option forms describe the minute unit and five-minute grid."""
+    for language in ("en", "cs"):
+        translations = _leaf_values(_load_translation(language))
+        label = translations[("options", "step", "init", "data", "upload_interval")]
+        description = translations[("options", "step", "init", "data_description", "upload_interval")]
+        error = translations[("options", "step", "init", "error", "invalid_upload_interval")]
+        assert "minut" in label.lower()
+        assert "minut" in description.lower()
+        assert "5" in error and "1" in error

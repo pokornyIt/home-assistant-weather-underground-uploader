@@ -86,8 +86,11 @@ existing configuration unchanged.
 
 All measurement mappings are optional, but an active station requires at least
 one mapping and an upload requires at least one currently valid mapped value.
-The default upload interval is 300 seconds and can be set from 60 to 3,600
-seconds. The maximum accepted source age defaults to 60 minutes and can be set
+The default upload interval is 30 minutes and can be set from 5 to 1,440
+minutes in 5-minute steps. Existing installations migrate their saved interval
+once: a missing value or the former 300-second default becomes 30 minutes;
+other values are rounded up to the next 5-minute step and clamped to the new
+range. The maximum accepted source age defaults to 60 minutes and can be set
 from 1 to 1,440 minutes independently for each station. Saving either option
 reloads that config entry, so the new value takes effect without restarting
 Home Assistant.
@@ -255,7 +258,7 @@ To download diagnostics, open **Settings > Devices & services**, select
 and select **Download diagnostics**.
 
 Diagnostics include the integration version, Station ID, configured entity
-mappings, upload interval, non-sensitive upload state, and current structured
+mappings, upload interval in minutes, non-sensitive upload state, and current structured
 mapping problems. The Station Key is redacted. Entity IDs can still reveal
 details about your installation, so review the file before sharing it publicly.
 
