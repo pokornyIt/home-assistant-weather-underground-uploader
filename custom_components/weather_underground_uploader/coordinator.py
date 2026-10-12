@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .api import WeatherUndergroundAuthenticationError, WeatherUndergroundClient, WeatherUndergroundError
-from .const import CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_SECONDS
+from .const import CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_MINUTES
 from .mapping import build_observation, build_observation_result
 from .models import MappingProblemType, MappingValidationProblem, has_configured_mapping
 from .repairs import async_sync_mapping_issues
@@ -101,14 +101,14 @@ class WeatherUndergroundUploadCoordinator(DataUpdateCoordinator[UploadState]):
         :param entry: Weather Underground station config entry.
         :param client: Credential-safe upload client.
         """
-        interval_seconds = int(entry.options.get(CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_SECONDS))
+        interval_minutes = int(entry.options.get(CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL_MINUTES))
         self.upload_enabled: bool = has_configured_mapping(entry.options)
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=f"Weather Underground Uploader {entry.title}",
-            update_interval=timedelta(seconds=interval_seconds) if self.upload_enabled else None,
+            update_interval=timedelta(minutes=interval_minutes) if self.upload_enabled else None,
         )
         self.data = UploadState()
         self._entry = entry

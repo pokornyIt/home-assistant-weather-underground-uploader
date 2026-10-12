@@ -50,6 +50,9 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_upload_interval": "Zvolte celé číslo od 5 do 1 440 v krocích po 5 minutách."
+    },
     "step": {
       "init": {
         "data": {
@@ -63,7 +66,7 @@
           "temperature_entity": "Venkovní teplota",
           "uv_index_entity": "UV index",
           "wind_direction_entity": "Směr větru",
-          "upload_interval": "Interval odesílání",
+          "upload_interval": "Interval odesílání (minuty)",
           "wind_gust_entity": "Náraz větru",
           "wind_speed_entity": "Rychlost větru"
         },
@@ -78,11 +81,11 @@
           "temperature_entity": "Entita poskytující venkovní teplotu.",
           "uv_index_entity": "Entita poskytující číselnou hodnotu UV indexu.",
           "wind_direction_entity": "Entita poskytující směr větru ve stupních.",
-          "upload_interval": "Doba mezi pravidelnými odesláními do Weather Underground.",
+          "upload_interval": "Doba mezi pravidelnými odesláními do Weather Underground. Zvolte 5 až 1 440 minut v krocích po 5 minutách.",
           "wind_gust_entity": "Entita poskytující rychlost nárazu větru.",
           "wind_speed_entity": "Entita poskytující rychlost ustáleného větru."
         },
-        "description": "Zvolte interval odesílání a maximální stáří zdroje, potom přiřaďte k virtuální stanici dostupné senzory nebo číselné pomocníky. Uložení prvního přiřazení ihned spustí odesílání.",
+        "description": "Zvolte interval odesílání v minutách a maximální stáří zdroje, potom přiřaďte k virtuální stanici dostupné senzory nebo číselné pomocníky. Uložení prvního přiřazení ihned spustí odesílání.",
         "title": "Možnosti stanice"
       }
     }

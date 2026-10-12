@@ -50,6 +50,9 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_upload_interval": "Choose a whole number from 5 to 1,440 in 5-minute steps."
+    },
     "step": {
       "init": {
         "data": {
@@ -63,7 +66,7 @@
           "temperature_entity": "Outdoor temperature",
           "uv_index_entity": "UV index",
           "wind_direction_entity": "Wind direction",
-          "upload_interval": "Upload interval",
+          "upload_interval": "Upload interval (minutes)",
           "wind_gust_entity": "Wind gust",
           "wind_speed_entity": "Wind speed"
         },
@@ -78,11 +81,11 @@
           "temperature_entity": "Entity providing outdoor temperature.",
           "uv_index_entity": "Entity providing the numeric UV index.",
           "wind_direction_entity": "Entity providing wind direction in degrees.",
-          "upload_interval": "Time between scheduled Weather Underground uploads.",
+          "upload_interval": "Time between scheduled Weather Underground uploads. Choose 5 to 1,440 minutes in 5-minute steps.",
           "wind_gust_entity": "Entity providing wind gust speed.",
           "wind_speed_entity": "Entity providing sustained wind speed."
         },
-        "description": "Choose an upload interval and maximum source age, then map any available sensor or numeric helper to the virtual station. Saving the first mapping starts uploads immediately.",
+        "description": "Choose an upload interval in minutes and maximum source age, then map any available sensor or numeric helper to the virtual station. Saving the first mapping starts uploads immediately.",
         "title": "Station options"
       }
     }

@@ -32,6 +32,7 @@ def _create_entry(hass: HomeAssistant, station_id: str) -> MockConfigEntry:
             CONF_STATION_ID: station_id,
             CONF_STATION_KEY: "synthetic-test-key",
         },
+        version=2,
     )
     entry.add_to_hass(hass)
     return entry

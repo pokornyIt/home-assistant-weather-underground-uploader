@@ -46,6 +46,7 @@ def _create_entry(hass: HomeAssistant, station_id: str = "IPRAGUE1") -> MockConf
             CONF_TEMPERATURE: temperature_entity,
             CONF_HUMIDITY: humidity_entity,
         },
+        version=2,
     )
     entry.add_to_hass(hass)
     hass.states.async_set(temperature_entity, STATE_UNAVAILABLE)

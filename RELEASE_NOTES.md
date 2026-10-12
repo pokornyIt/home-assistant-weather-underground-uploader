@@ -16,4 +16,8 @@ maintain, and troubleshoot through native Home Assistant workflows.
 
 ## ⚠️ Breaking changes
 
-None.
+- The upload interval is now configured in minutes rather than seconds.
+- New stations default to a 30-minute upload interval.
+- Existing missing and 300-second interval values migrate to 30 minutes.
+- Other existing interval values round up to the next 5-minute increment and
+  clamp to the supported 5-to-1,440-minute range.

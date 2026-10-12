@@ -5,6 +5,14 @@ is based on Keep a Changelog, and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Changed the upload interval from seconds to minutes, with a 30-minute default
+  and a 5-to-1,440-minute range in 5-minute steps.
+- Migrated missing and former 300-second upload intervals to 30 minutes; other
+  legacy values round up to the next 5-minute increment and clamp to the new
+  range.
+
 ## [0.2.0] - 2026-08-25
 
 ### Added

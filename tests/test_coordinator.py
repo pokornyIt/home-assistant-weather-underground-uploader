@@ -38,7 +38,7 @@ def _create_entry(
     hass: HomeAssistant,
     *,
     station_id: str = "IPRAGUE1",
-    interval: int = 300,
+    interval: int = 30,
     mapped: bool = True,
 ) -> MockConfigEntry:
     """Create a synthetic configured station."""
@@ -54,6 +54,7 @@ def _create_entry(
             CONF_STATION_KEY: "synthetic-test-key",
         },
         options=options,
+        version=2,
     )
     entry.add_to_hass(hass)
     if mapped:
@@ -329,8 +330,8 @@ async def test_test_upload_does_not_overlap_scheduled_upload(hass: HomeAssistant
 
 async def test_stations_have_independent_coordinators(hass: HomeAssistant) -> None:
     """Each config entry owns its client, interval, and coordinator state."""
-    first = _create_entry(hass, station_id="IPRAGUE1", interval=120)
-    second = _create_entry(hass, station_id="IBRNO2", interval=600)
+    first = _create_entry(hass, station_id="IPRAGUE1", interval=5)
+    second = _create_entry(hass, station_id="IBRNO2", interval=10)
     with patch.object(WeatherUndergroundClient, "async_upload", AsyncMock()):
         await _setup_entry(hass, first)
         await _setup_entry(hass, second)
@@ -339,7 +340,7 @@ async def test_stations_have_independent_coordinators(hass: HomeAssistant) -> No
     assert first.runtime_data.coordinator is not second.runtime_data.coordinator
     assert first.runtime_data.coordinator.update_interval is not None
     assert second.runtime_data.coordinator.update_interval is not None
-    assert first.runtime_data.coordinator.update_interval.total_seconds() == 120
+    assert first.runtime_data.coordinator.update_interval.total_seconds() == 300
     assert second.runtime_data.coordinator.update_interval.total_seconds() == 600
 
     await _unload_entry(hass, first)
@@ -348,7 +349,7 @@ async def test_stations_have_independent_coordinators(hass: HomeAssistant) -> No
 
 async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant) -> None:
     """Saving the first mapping enables scheduling and uploads immediately."""
-    entry = _create_entry(hass, interval=300, mapped=False)
+    entry = _create_entry(hass, interval=30, mapped=False)
     upload = AsyncMock()
     with patch.object(WeatherUndergroundClient, "async_upload", upload):
         await _setup_entry(hass, entry)
@@ -366,7 +367,7 @@ async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant
             result["flow_id"],
             {
                 CONF_TEMPERATURE: temperature_entity,
-                CONF_UPLOAD_INTERVAL: 120,
+                CONF_UPLOAD_INTERVAL: 10,
             },
         )
         await hass.async_block_till_done()
@@ -375,9 +376,47 @@ async def test_first_mapping_reloads_and_uploads_immediately(hass: HomeAssistant
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.coordinator is not previous_coordinator
     assert entry.runtime_data.coordinator.update_interval is not None
-    assert entry.runtime_data.coordinator.update_interval.total_seconds() == 120
+    assert entry.runtime_data.coordinator.update_interval.total_seconds() == 600
     upload.assert_awaited_once_with({"tempf": "68"})
     await _unload_entry(hass, entry)
+
+
+async def test_interval_option_reloads_only_the_active_station(hass: HomeAssistant) -> None:
+    """Saving an interval replaces one active station's scheduler without affecting another."""
+    first = _create_entry(hass, station_id="IPRAGUE1", interval=30)
+    second = _create_entry(hass, station_id="IBRNO2", interval=10)
+    upload = AsyncMock()
+    with patch.object(WeatherUndergroundClient, "async_upload", upload):
+        await _setup_entry(hass, first)
+        await _setup_entry(hass, second)
+        previous_coordinator = first.runtime_data.coordinator
+        second_coordinator = second.runtime_data.coordinator
+        second_timer = second_coordinator._unsub_refresh
+
+        assert previous_coordinator.update_interval == timedelta(minutes=30)
+        assert previous_coordinator._unsub_refresh is not None
+        assert second_coordinator.update_interval == timedelta(minutes=10)
+        assert second_timer is not None
+
+        result = await hass.config_entries.options.async_init(first.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_TEMPERATURE: first.options[CONF_TEMPERATURE],
+                CONF_UPLOAD_INTERVAL: 10,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert first.runtime_data.coordinator is not previous_coordinator
+    assert first.runtime_data.coordinator.update_interval == timedelta(minutes=10)
+    assert previous_coordinator._unsub_refresh is None
+    assert second.runtime_data.coordinator is second_coordinator
+    assert second_coordinator.update_interval == timedelta(minutes=10)
+    assert second_coordinator._unsub_refresh is second_timer
+    await _unload_entry(hass, first)
+    await _unload_entry(hass, second)
 
 
 async def test_source_age_option_takes_effect_after_options_reload(hass: HomeAssistant) -> None:
